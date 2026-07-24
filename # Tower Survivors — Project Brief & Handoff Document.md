@@ -164,8 +164,8 @@ Self-paced (no external deadline). Ordering still holds; dates dropped for the P
 |---|---|---|
 | 1. Lock the concept | All design decisions finalised, including enemy types and what each punishes | ✅ Locked (this document) |
 | 2. Tower and enemy foundation | Tower, pooled + lightweight enemies, auto-attacks, run timer | ✅ Done |
-| 3. LMB active skill | Cursor-aimed cooldown meteor, playable core loop | Next |
-| 4. Summon system | Rally points, stacking, unit cap, 2 summon types | Pending |
+| 3. LMB active skill | Cursor-aimed cooldown meteor, playable core loop | ✅ Done |
+| 4. Summon system | Rally points, stacking, unit cap, 2 summon types | Next |
 | 5. Upgrade loop | XP, level-up screen, all upgrade content, wave/multi-lane scaling | Pending |
 | 6. Art, audio, and feel | Assets, hit flash, screen shake, SFX, music | Pending |
 | 7. Playtest and fix | Outside playtests, crash fixes, browser optimisation | Pending |

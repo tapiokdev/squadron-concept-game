@@ -51,6 +51,7 @@ func _process(delta: float) -> void:
 	var dirty := false
 	if _cd > 0.0:
 		_cd = maxf(_cd - delta, 0.0)
+		dirty = true
 	if _impact_in >= 0.0:
 		_impact_in -= delta
 		if _impact_in < 0.0:
@@ -71,6 +72,7 @@ func _impact() -> void:
 	_explosion_left = EXPLOSION_TIME
 
 func _draw() -> void:
+	_draw_cooldown_ring()
 	if _impact_in >= 0.0:
 		draw_arc(_pending_pos, radius, 0.0, TAU, 48, Color(1.0, 0.5, 0.2, 0.8), 2.0)
 		draw_circle(_pending_pos, radius, Color(1.0, 0.5, 0.2, 0.12))
@@ -78,3 +80,18 @@ func _draw() -> void:
 		var alpha := _explosion_left / EXPLOSION_TIME
 		draw_circle(_explosion_pos, radius, Color(1.0, 0.6, 0.15, alpha * 0.6))
 		draw_circle(_explosion_pos, radius * 0.55, Color(1.0, 0.9, 0.5, alpha * 0.8))
+
+## The brief requires an always-visible cooldown indicator: a recharge
+## ring around the tower that fills clockwise and lights up when ready.
+func _draw_cooldown_ring() -> void:
+	if _tower == null:
+		return
+	var ring_radius := _tower.radius + 8.0
+	if is_ready():
+		draw_arc(_tower.position, ring_radius, 0.0, TAU, 40, Color(1.0, 0.6, 0.2, 0.9), 3.0)
+		return
+	draw_arc(_tower.position, ring_radius, 0.0, TAU, 40, Color(1.0, 1.0, 1.0, 0.15), 3.0)
+	var fraction := cooldown_fraction()
+	if fraction > 0.0:
+		draw_arc(_tower.position, ring_radius, -PI / 2.0, -PI / 2.0 + TAU * fraction, 40,
+			Color(1.0, 0.6, 0.2, 0.5), 3.0)
