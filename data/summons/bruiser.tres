@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SummonDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/summons/summon_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Bruiser"
+max_hp = 90.0
+speed = 80.0
+radius = 12.0
+attack_damage = 18.0
+attack_interval = 1.0
+attack_range = 38.0
+base_respawn = 10.0
+color = Color(0.25, 0.7, 0.75, 1)

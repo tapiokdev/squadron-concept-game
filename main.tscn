@@ -7,7 +7,8 @@
 [ext_resource type="Script" uid="uid://cwbgoem4kwgva" path="res://scripts/weapons/bolt_weapon.gd" id="4_7mycd"]
 [ext_resource type="Script" uid="uid://bmwon7t7kxr5o" path="res://scripts/weapons/pulse_weapon.gd" id="5_272bh"]
 [ext_resource type="Script" uid="uid://cl5gi1cvtvj0w" path="res://scripts/projectile_pool.gd" id="6_272bh"]
-[ext_resource type="Script" path="res://scripts/skills/meteor_skill.gd" id="8_5vw27"]
+[ext_resource type="Script" uid="uid://cudwacynjo7e2" path="res://scripts/skills/meteor_skill.gd" id="8_5vw27"]
+[ext_resource type="Script" path="res://scripts/summons/summon_squad.gd" id="9_kek77"]
 
 [node name="Main" type="Node2D" unique_id=2138863706]
 script = ExtResource("1_0xm2m")
@@ -40,3 +41,6 @@ script = ExtResource("6_272bh")
 
 [node name="Meteor" type="Node2D" parent="." unique_id=458302395]
 script = ExtResource("8_5vw27")
+
+[node name="Squad" type="Node2D" parent="." unique_id=1112276786]
+script = ExtResource("9_kek77")

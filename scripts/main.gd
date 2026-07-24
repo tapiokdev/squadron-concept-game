@@ -13,6 +13,9 @@ extends Node2D
 @onready var bolt: BoltWeapon = $Tower/Bolt
 @onready var pulse: PulseWeapon = $Tower/Pulse
 @onready var meteor: MeteorSkill = $Meteor
+@onready var squad: SummonSquad = $Squad
+
+const BRUISER := preload("res://data/summons/bruiser.tres")
 @onready var spawner: EnemySpawner = $Spawner
 @onready var info_label: Label = $HUD/InfoLabel
 
@@ -26,6 +29,10 @@ func _ready() -> void:
 	bolt.setup(enemy_pool, projectile_pool, tower)
 	pulse.setup(enemy_pool, tower)
 	meteor.setup(enemy_pool, tower)
+	squad.setup(enemy_pool, tower)
+	# Free starting summon so the rally-point mechanic is engaged
+	# immediately (brief: first offer summon-only OR free start).
+	squad.try_add_summon(BRUISER)
 
 func _process(delta: float) -> void:
 	if run_over:
