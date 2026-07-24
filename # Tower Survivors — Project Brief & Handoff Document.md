@@ -166,8 +166,8 @@ Self-paced (no external deadline). Ordering still holds; dates dropped for the P
 | 2. Tower and enemy foundation | Tower, pooled + lightweight enemies, auto-attacks, run timer | ✅ Done |
 | 3. LMB active skill | Cursor-aimed cooldown meteor, playable core loop | ✅ Done |
 | 4. Summon system | Rally points, stacking, unit cap, 2 summon types | ✅ Done |
-| 5. Upgrade loop | XP, level-up screen, all upgrade content, wave/multi-lane scaling | Next |
-| 6. Art, audio, and feel | Assets, hit flash, screen shake, SFX, music | Pending |
+| 5. Upgrade loop | XP, level-up screen, all upgrade content, wave/multi-lane scaling | ✅ Done |
+| 6. Art, audio, and feel | Assets, hit flash, screen shake, SFX, music | Next |
 | 7. Playtest and fix | Outside playtests, crash fixes, browser optimisation | Pending |
 | 8. Publish | itch.io page, gif/trailer, web export, publish | Pending |
 

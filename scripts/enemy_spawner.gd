@@ -1,10 +1,12 @@
 class_name EnemySpawner
 extends Node
 
-## Timed wave spawner. Single spawn arc for now — opening the 2nd/3rd arcs
-## is the Phase 5 wave-scaling pass. Every spawn goes through
-## EnemyPool.try_spawn(), which enforces the global live-count cap; a null
-## return simply drops that spawn.
+## Timed wave spawner. Spawn arcs unlock over the run (1 lane early,
+## 2 from ~min 3.5, 3 from ~min 6.5) — with one rally point the squad
+## covers one arc and the rest fall to auto-attacks, meteor, and tower
+## HP; that is the core tension. Every spawn goes through
+## EnemyPool.try_spawn(), which enforces the global live-count cap; a
+## null return simply drops that spawn.
 
 const SWARMER := preload("res://data/enemies/swarmer.tres")
 const BRUTE := preload("res://data/enemies/brute.tres")
@@ -12,7 +14,8 @@ const RUSHER := preload("res://data/enemies/rusher.tres")
 const BROODMOTHER := preload("res://data/enemies/broodmother.tres")
 
 @export var active := false
-@export var arc_center_deg := -90.0
+@export var arc_centers_deg: Array[float] = [-90.0, 135.0, 0.0]
+@export var arc_unlock_sec: Array[float] = [0.0, 210.0, 390.0]
 @export var arc_span_deg := 70.0
 @export var spawn_margin := 60.0
 ## Spawn-rate curve: spawns/sec at t=0 plus extra per elapsed minute.
@@ -48,13 +51,21 @@ func _process(delta: float) -> void:
 		_spawn_one()
 	if not _elite_spawned and elapsed >= elite_at_sec:
 		_elite_spawned = true
-		var angle := deg_to_rad(arc_center_deg)
+		var angle := deg_to_rad(arc_centers_deg[0])
 		var dist := _tower.get_viewport_rect().size.length() * 0.5 + spawn_margin
 		_pool.try_spawn(BROODMOTHER, _tower.position + Vector2.from_angle(angle) * dist, _tower)
 
+func _unlocked_arcs() -> int:
+	var count := 0
+	for unlock in arc_unlock_sec:
+		if elapsed >= unlock:
+			count += 1
+	return count
+
 func _spawn_one() -> void:
 	var def: EnemyDef = SWARMER
-	var angle := deg_to_rad(arc_center_deg + randf_range(-0.5, 0.5) * arc_span_deg)
+	var arc: float = arc_centers_deg[randi() % _unlocked_arcs()]
+	var angle := deg_to_rad(arc + randf_range(-0.5, 0.5) * arc_span_deg)
 	var roll := randf()
 	if elapsed >= brute_after_sec and roll < 0.08:
 		def = BRUTE
