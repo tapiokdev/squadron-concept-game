@@ -12,6 +12,9 @@ extends Node2D
 @export var max_live: int = 150
 @export var prewarm: int = 48
 
+## Emitted on every enemy death with its XP reward; main tallies levels.
+signal enemy_killed(xp: int)
+
 ## Set by main; lets enemies see summons that block their path.
 var squad: SummonSquad
 
@@ -53,3 +56,4 @@ func _on_enemy_died(enemy: Enemy) -> void:
 	live_count -= 1
 	live.erase(enemy)
 	_inactive.append(enemy)
+	enemy_killed.emit(enemy.def.xp_value)

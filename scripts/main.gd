@@ -22,9 +22,19 @@ const BRUISER := preload("res://data/summons/bruiser.tres")
 var elapsed := 0.0
 var run_over := false
 
+## XP curve tuned so a meaningful build (both summon types, stacking,
+## 1-2 weapon upgrades) is assembled by the ~min 5 elite. Tune freely.
+var xp := 0
+var level := 1
+var pending_levelups := 0
+
+func xp_to_next() -> int:
+	return 20 + (level - 1) * 15
+
 func _ready() -> void:
 	tower.position = get_viewport_rect().size * 0.5
 	tower.died.connect(_end_run.bind(false))
+	enemy_pool.enemy_killed.connect(_on_enemy_killed)
 	spawner.setup(enemy_pool, tower)
 	bolt.setup(enemy_pool, projectile_pool, tower)
 	pulse.setup(enemy_pool, tower)
@@ -43,10 +53,19 @@ func _process(delta: float) -> void:
 		_end_run(true)
 		return
 	var remaining := int(run_duration - elapsed)
-	info_label.text = "%d:%02d   HP %d/%d   enemies %d" % [
+	info_label.text = "%d:%02d   HP %d/%d   LV %d  XP %d/%d   enemies %d" % [
 		int(remaining / 60.0), remaining % 60, roundi(tower.hp), roundi(tower.max_hp),
-		enemy_pool.live_count,
+		level, xp, xp_to_next(), enemy_pool.live_count,
 	]
+
+func _on_enemy_killed(amount: int) -> void:
+	if run_over:
+		return
+	xp += amount
+	while xp >= xp_to_next():
+		xp -= xp_to_next()
+		level += 1
+		pending_levelups += 1
 
 func _end_run(won: bool) -> void:
 	if run_over:
