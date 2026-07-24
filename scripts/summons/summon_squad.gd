@@ -14,7 +14,10 @@ const SLOT_RADIUS := 22.0
 ## Attack range below this counts as melee for formation purposes.
 const MELEE_RANGE_CUTOFF := 60.0
 const REFORM_INTERVAL := 0.5
-const THREAT_SCAN_RADIUS := 320.0
+
+## The formation only reacts to enemies this close to the rally point;
+## farther threats (often off-screen) shouldn't make the squad shuffle.
+@export var threat_scan_radius := 200.0
 
 var rally_point := Vector2.ZERO
 
@@ -80,7 +83,7 @@ func _assign_slots() -> void:
 	if n == 0:
 		return
 	var threat_angle := _tower.position.direction_to(rally_point).angle()
-	var foe := _enemies.nearest_live(rally_point, THREAT_SCAN_RADIUS)
+	var foe := _enemies.nearest_live(rally_point, threat_scan_radius)
 	if foe != null:
 		threat_angle = rally_point.direction_to(foe.global_position).angle()
 	# Ring slot i sits at threat_angle + i*TAU/n; slots ordered by how
