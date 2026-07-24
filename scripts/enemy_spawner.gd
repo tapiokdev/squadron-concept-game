@@ -25,7 +25,7 @@ const BROODMOTHER := preload("res://data/enemies/broodmother.tres")
 @export var rate_per_min := 0.45
 @export var max_rate := 3.0
 ## Enemy HP scaling: +fraction of base HP per elapsed minute.
-@export var hp_scale_per_min := 0.15
+@export var hp_scale_per_min := 0.10
 @export var brute_after_sec := 60.0
 @export var rusher_after_sec := 90.0
 ## Fraction of spawns that roll into each special type once unlocked.
