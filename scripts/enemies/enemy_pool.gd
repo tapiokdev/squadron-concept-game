@@ -13,6 +13,7 @@ extends Node2D
 @export var prewarm: int = 48
 
 var live_count: int = 0
+var live: Array[Enemy] = []
 
 var _inactive: Array[Enemy] = []
 
@@ -26,7 +27,18 @@ func try_spawn(def: EnemyDef, spawn_pos: Vector2, target: Tower, hp_scale: float
 	var enemy: Enemy = _inactive.pop_back() if not _inactive.is_empty() else _create()
 	enemy.configure(def, spawn_pos, target, hp_scale)
 	live_count += 1
+	live.append(enemy)
 	return enemy
+
+func nearest_live(pos: Vector2, max_dist: float) -> Enemy:
+	var best: Enemy = null
+	var best_dist_sq := max_dist * max_dist
+	for enemy in live:
+		var dist_sq := pos.distance_squared_to(enemy.global_position)
+		if dist_sq < best_dist_sq:
+			best_dist_sq = dist_sq
+			best = enemy
+	return best
 
 func _create() -> Enemy:
 	var enemy := Enemy.new()
@@ -36,4 +48,5 @@ func _create() -> Enemy:
 
 func _on_enemy_died(enemy: Enemy) -> void:
 	live_count -= 1
+	live.erase(enemy)
 	_inactive.append(enemy)

@@ -8,7 +8,9 @@ extends Node2D
 @export var run_duration := 480.0
 
 @onready var enemy_pool: EnemyPool = $EnemyPool
+@onready var projectile_pool: ProjectilePool = $ProjectilePool
 @onready var tower: Tower = $Tower
+@onready var bolt: BoltWeapon = $Tower/Bolt
 @onready var spawner: EnemySpawner = $Spawner
 @onready var info_label: Label = $HUD/InfoLabel
 
@@ -19,6 +21,7 @@ func _ready() -> void:
 	tower.position = get_viewport_rect().size * 0.5
 	tower.died.connect(_end_run.bind(false))
 	spawner.setup(enemy_pool, tower)
+	bolt.setup(enemy_pool, projectile_pool, tower)
 
 func _process(delta: float) -> void:
 	if run_over:
@@ -29,7 +32,7 @@ func _process(delta: float) -> void:
 		return
 	var remaining := int(run_duration - elapsed)
 	info_label.text = "%d:%02d   HP %d/%d   enemies %d" % [
-		remaining / 60, remaining % 60, roundi(tower.hp), roundi(tower.max_hp),
+		int(remaining / 60.0), remaining % 60, roundi(tower.hp), roundi(tower.max_hp),
 		enemy_pool.live_count,
 	]
 

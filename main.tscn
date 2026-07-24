@@ -3,7 +3,9 @@
 [ext_resource type="Script" uid="uid://dle763bunsqa7" path="res://scripts/main.gd" id="1_0xm2m"]
 [ext_resource type="Script" uid="uid://cvs48mwoll5xo" path="res://scripts/enemies/enemy_pool.gd" id="2_h2yge"]
 [ext_resource type="Script" uid="uid://coxiqvlqbfpsk" path="res://scripts/tower.gd" id="3_h2yge"]
-[ext_resource type="Script" path="res://scripts/enemy_spawner.gd" id="4_1bvp3"]
+[ext_resource type="Script" uid="uid://blq07ni462w1i" path="res://scripts/enemy_spawner.gd" id="4_1bvp3"]
+[ext_resource type="Script" path="res://scripts/weapons/bolt_weapon.gd" id="4_7mycd"]
+[ext_resource type="Script" path="res://scripts/projectile_pool.gd" id="6_272bh"]
 
 [node name="Main" type="Node2D" unique_id=2138863706]
 script = ExtResource("1_0xm2m")
@@ -13,6 +15,9 @@ script = ExtResource("2_h2yge")
 
 [node name="Tower" type="Node2D" parent="." unique_id=200928788]
 script = ExtResource("3_h2yge")
+
+[node name="Bolt" type="Node" parent="Tower" unique_id=627310433]
+script = ExtResource("4_7mycd")
 
 [node name="Spawner" type="Node" parent="." unique_id=20111829]
 script = ExtResource("4_1bvp3")
@@ -24,3 +29,6 @@ offset_left = 12.0
 offset_top = 8.0
 offset_right = 13.0
 offset_bottom = 31.0
+
+[node name="ProjectilePool" type="Node2D" parent="." unique_id=1662471472]
+script = ExtResource("6_272bh")

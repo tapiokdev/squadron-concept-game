@@ -18,7 +18,7 @@ const RUSHER := preload("res://data/enemies/rusher.tres")
 @export var base_rate := 1.0
 @export var rate_per_min := 0.7
 ## Enemy HP scaling: +fraction of base HP per elapsed minute.
-@export var hp_scale_per_min := 0.3
+@export var hp_scale_per_min := 0.15
 @export var brute_after_sec := 60.0
 @export var rusher_after_sec := 90.0
 
