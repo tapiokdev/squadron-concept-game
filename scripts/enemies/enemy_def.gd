@@ -4,9 +4,10 @@ extends Resource
 ## Data definition for one enemy type. Enemies are pooled and reconfigured
 ## from one of these on spawn, so everything type-specific lives here.
 
-## SPAWNER (Broodmother periodic spawn / Popper death-spawn) is added once
-## that behaviour exists; the pool and enemy don't care about the value yet.
-enum Behavior { WALKER }
+## WALKER walks at the tower. SPAWNER also periodically spawns
+## `spawned_def` enemies (Broodmother); a death-spawn variant for the
+## optional Popper can reuse the same fields later.
+enum Behavior { WALKER, SPAWNER }
 
 @export var display_name: String = ""
 @export var behavior: Behavior = Behavior.WALKER
@@ -17,3 +18,8 @@ enum Behavior { WALKER }
 @export var attack_interval: float = 0.8
 @export var xp_value: int = 1
 @export var color: Color = Color.WHITE
+
+@export_group("Spawner behaviour")
+@export var spawned_def: EnemyDef
+@export var spawn_interval: float = 4.0
+@export var spawn_count: int = 3

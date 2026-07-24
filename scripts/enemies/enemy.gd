@@ -16,6 +16,9 @@ var target: Tower
 var _shape: CircleShape2D
 var _active := false
 var _attack_cooldown: float = 0.0
+var _pool: EnemyPool
+var _hp_scale: float = 1.0
+var _spawn_cooldown: float = 0.0
 
 func _init() -> void:
 	collision_layer = ENEMY_COLLISION_LAYER
@@ -32,12 +35,15 @@ func _ready() -> void:
 	# clobbering the set_process(false) from _init — re-assert it here.
 	set_process(_active)
 
-func configure(new_def: EnemyDef, spawn_pos: Vector2, new_target: Tower, hp_scale: float = 1.0) -> void:
+func configure(pool: EnemyPool, new_def: EnemyDef, spawn_pos: Vector2, new_target: Tower, hp_scale: float = 1.0) -> void:
+	_pool = pool
 	def = new_def
 	hp = def.max_hp * hp_scale
+	_hp_scale = hp_scale
 	global_position = spawn_pos
 	target = new_target
 	_attack_cooldown = 0.0
+	_spawn_cooldown = def.spawn_interval
 	_shape.radius = def.radius
 	_active = true
 	visible = true
@@ -59,6 +65,13 @@ func _process(delta: float) -> void:
 	elif _attack_cooldown == 0.0 and target.alive:
 		target.take_damage(def.contact_damage)
 		_attack_cooldown = def.attack_interval
+	if def.behavior == EnemyDef.Behavior.SPAWNER and def.spawned_def != null:
+		_spawn_cooldown -= delta
+		if _spawn_cooldown <= 0.0:
+			_spawn_cooldown = def.spawn_interval
+			for i in def.spawn_count:
+				var offset := Vector2.from_angle(randf() * TAU) * (def.radius + 14.0)
+				_pool.try_spawn(def.spawned_def, global_position + offset, target, _hp_scale)
 
 func take_damage(amount: float) -> void:
 	if not _active:

@@ -25,7 +25,7 @@ func try_spawn(def: EnemyDef, spawn_pos: Vector2, target: Tower, hp_scale: float
 	if live_count >= max_live:
 		return null
 	var enemy: Enemy = _inactive.pop_back() if not _inactive.is_empty() else _create()
-	enemy.configure(def, spawn_pos, target, hp_scale)
+	enemy.configure(self, def, spawn_pos, target, hp_scale)
 	live_count += 1
 	live.append(enemy)
 	return enemy

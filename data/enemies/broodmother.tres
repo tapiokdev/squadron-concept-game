@@ -1,14 +1,18 @@
-[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy_def.gd" id="1"]
+[ext_resource type="Resource" path="res://data/enemies/swarmer.tres" id="2"]
 
 [resource]
 script = ExtResource("1")
 display_name = "Broodmother"
-behavior = 0
+behavior = 1
 max_hp = 600.0
 speed = 25.0
 radius = 24.0
 contact_damage = 25.0
 xp_value = 40
 color = Color(0.35, 0.75, 0.35, 1)
+spawned_def = ExtResource("2")
+spawn_interval = 4.0
+spawn_count = 3

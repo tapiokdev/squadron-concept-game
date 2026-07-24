@@ -9,6 +9,7 @@ extends Node
 const SWARMER := preload("res://data/enemies/swarmer.tres")
 const BRUTE := preload("res://data/enemies/brute.tres")
 const RUSHER := preload("res://data/enemies/rusher.tres")
+const BROODMOTHER := preload("res://data/enemies/broodmother.tres")
 
 @export var active := false
 @export var arc_center_deg := -90.0
@@ -21,8 +22,12 @@ const RUSHER := preload("res://data/enemies/rusher.tres")
 @export var hp_scale_per_min := 0.15
 @export var brute_after_sec := 60.0
 @export var rusher_after_sec := 90.0
+## The elite moment from the brief (~min 5).
+@export var elite_at_sec := 300.0
 
 var elapsed := 0.0
+
+var _elite_spawned := false
 
 var _pool: EnemyPool
 var _tower: Tower
@@ -41,6 +46,11 @@ func _process(delta: float) -> void:
 	while _accum >= 1.0:
 		_accum -= 1.0
 		_spawn_one()
+	if not _elite_spawned and elapsed >= elite_at_sec:
+		_elite_spawned = true
+		var angle := deg_to_rad(arc_center_deg)
+		var dist := _tower.get_viewport_rect().size.length() * 0.5 + spawn_margin
+		_pool.try_spawn(BROODMOTHER, _tower.position + Vector2.from_angle(angle) * dist, _tower)
 
 func _spawn_one() -> void:
 	var def: EnemyDef = SWARMER
