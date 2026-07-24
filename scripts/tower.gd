@@ -16,6 +16,12 @@ var alive := true
 func _ready() -> void:
 	hp = max_hp
 
+func heal(amount: float) -> void:
+	if not alive:
+		return
+	hp = minf(hp + amount, max_hp)
+	hp_changed.emit(hp, max_hp)
+
 func take_damage(amount: float) -> void:
 	if not alive:
 		return

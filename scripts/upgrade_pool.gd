@@ -81,4 +81,13 @@ static func _tower_options(main: Node) -> Array[Dictionary]:
 			"desc": "Impacts echo once for 50% damage",
 			"apply": func() -> void: main.meteor.aftershock = true,
 		})
+	# Repeatable fallback so late level-ups stay meaningful after the
+	# real upgrades run out; only offered when actually damaged.
+	if main.tower.hp < main.tower.max_hp:
+		options.append({
+			"id": "emergency_repairs",
+			"title": "Emergency repairs",
+			"desc": "Restore 25 tower HP",
+			"apply": func() -> void: main.tower.heal(25.0),
+		})
 	return options
