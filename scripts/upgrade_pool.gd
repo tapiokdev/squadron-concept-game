@@ -30,15 +30,15 @@ static func roll(main: Node, count: int = 3) -> Array[Dictionary]:
 			"desc": "AoE burst around the tower — answers swarms",
 			"apply": func() -> void: main.pulse.enabled = true,
 		})
-	elif not main.pulse_boosted:
+	elif main.pulse_tier < 2:
 		options.append({
 			"id": "pulse_boost",
-			"title": "Pulse: wider & faster",
-			"desc": "+40% radius, fires 30% more often",
+			"title": "Pulse: wider & faster %s" % ["I", "II"][main.pulse_tier],
+			"desc": "+25% radius, fires 20% more often",
 			"apply": func() -> void:
-				main.pulse_boosted = true
-				main.pulse.radius *= 1.4
-				main.pulse.cooldown *= 0.7,
+				main.pulse_tier += 1
+				main.pulse.radius *= 1.25
+				main.pulse.cooldown *= 0.8,
 		})
 	if main.bolt.spread_count == 1:
 		options.append({
@@ -46,6 +46,20 @@ static func roll(main: Node, count: int = 3) -> Array[Dictionary]:
 			"title": "Bolt: triple spread",
 			"desc": "Bolt fires a spread of 3 projectiles",
 			"apply": func() -> void: main.bolt.spread_count = 3,
+		})
+	if main.bolt.pierce == 0:
+		options.append({
+			"id": "bolt_pierce",
+			"title": "Bolt: piercing shots",
+			"desc": "Bolts pass through one extra enemy",
+			"apply": func() -> void: main.bolt.pierce = 1,
+		})
+	if not main.meteor.aftershock:
+		options.append({
+			"id": "meteor_aftershock",
+			"title": "Meteor: aftershock",
+			"desc": "Impacts echo once for 50% damage",
+			"apply": func() -> void: main.meteor.aftershock = true,
 		})
 	options.shuffle()
 	return options.slice(0, count)

@@ -10,6 +10,7 @@ var damage: float = 0.0
 var velocity := Vector2.ZERO
 
 var _life_left: float = 0.0
+var _hits_left: int = 1
 var _active := false
 
 func _init() -> void:
@@ -28,11 +29,12 @@ func _ready() -> void:
 	# Entering the tree re-enables _process; re-assert the pooled state.
 	set_process(_active)
 
-func configure(spawn_pos: Vector2, direction: Vector2, speed: float, new_damage: float, new_max_range: float) -> void:
+func configure(spawn_pos: Vector2, direction: Vector2, speed: float, new_damage: float, new_max_range: float, pierce: int = 0) -> void:
 	global_position = spawn_pos
 	velocity = direction.normalized() * speed
 	damage = new_damage
 	_life_left = new_max_range / speed
+	_hits_left = 1 + pierce
 	_active = true
 	visible = true
 	set_process(true)
@@ -55,7 +57,9 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 	if area is Enemy:
 		area.take_damage(damage)
-		_despawn()
+		_hits_left -= 1
+		if _hits_left <= 0:
+			_despawn()
 
 func _despawn() -> void:
 	if not _active:

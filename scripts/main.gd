@@ -28,7 +28,7 @@ var run_over := false
 var xp := 0
 var level := 1
 var pending_levelups := 0
-var pulse_boosted := false
+var pulse_tier := 0
 
 func xp_to_next() -> int:
 	return 15 + (level - 1) * 12

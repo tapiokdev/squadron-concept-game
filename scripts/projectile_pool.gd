@@ -15,11 +15,11 @@ func _ready() -> void:
 	for i in prewarm:
 		_inactive.append(_create())
 
-func try_spawn(spawn_pos: Vector2, direction: Vector2, speed: float, damage: float, max_range: float) -> Projectile:
+func try_spawn(spawn_pos: Vector2, direction: Vector2, speed: float, damage: float, max_range: float, pierce: int = 0) -> Projectile:
 	if live_count >= max_live:
 		return null
 	var projectile: Projectile = _inactive.pop_back() if not _inactive.is_empty() else _create()
-	projectile.configure(spawn_pos, direction, speed, damage, max_range)
+	projectile.configure(spawn_pos, direction, speed, damage, max_range, pierce)
 	live_count += 1
 	return projectile
 

@@ -11,6 +11,8 @@ extends Node
 @export var attack_range := 420.0
 @export var spread_count := 1
 @export var spread_step_deg := 12.0
+## Extra enemies each bolt can pass through (behaviour upgrade).
+@export var pierce := 0
 
 var _enemies: EnemyPool
 var _projectiles: ProjectilePool
@@ -37,4 +39,4 @@ func _process(delta: float) -> void:
 		var offset := deg_to_rad(spread_step_deg) * (float(i) - (spread_count - 1) * 0.5)
 		_projectiles.try_spawn(
 			_tower.position, base_dir.rotated(offset),
-			projectile_speed, damage, attack_range + 80.0)
+			projectile_speed, damage, attack_range + 80.0, pierce)
