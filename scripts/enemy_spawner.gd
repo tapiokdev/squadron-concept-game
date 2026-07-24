@@ -57,9 +57,8 @@ func _process(delta: float) -> void:
 		_spawn_one()
 	if not _elite_spawned and elapsed >= elite_at_sec:
 		_elite_spawned = true
-		var angle := deg_to_rad(arc_centers_deg[0])
-		var dist := _tower.get_viewport_rect().size.length() * 0.5 + spawn_margin
-		_pool.try_spawn(BROODMOTHER, _tower.position + Vector2.from_angle(angle) * dist, _tower)
+		var dir := Vector2.from_angle(deg_to_rad(arc_centers_deg[0]))
+		_pool.try_spawn(BROODMOTHER, _tower.position + dir * _spawn_distance(dir), _tower)
 
 func _unlocked_arcs() -> int:
 	var count := 0
@@ -79,6 +78,24 @@ func _spawn_one() -> void:
 		def = RUSHER
 		# Rushers come in off-angle to punish tunnel vision on the main arc.
 		angle = randf() * TAU
-	var dist := _tower.get_viewport_rect().size.length() * 0.5 + spawn_margin
+	var dir := Vector2.from_angle(angle)
 	var hp_scale := 1.0 + hp_scale_per_min * elapsed / 60.0
-	_pool.try_spawn(def, _tower.position + Vector2.from_angle(angle) * dist, _tower, hp_scale)
+	_pool.try_spawn(def, _tower.position + dir * _spawn_distance(dir), _tower, hp_scale)
+
+## Distance from the tower to the screen edge along `dir`, plus margin —
+## so every lane's enemies appear at their screen edge instead of some
+## spawning far off-screen (the window isn't square).
+func _spawn_distance(dir: Vector2) -> float:
+	var vp := _tower.get_viewport_rect().size
+	var pos := _tower.position
+	var tx := INF
+	var ty := INF
+	if dir.x > 0.0:
+		tx = (vp.x - pos.x) / dir.x
+	elif dir.x < 0.0:
+		tx = -pos.x / dir.x
+	if dir.y > 0.0:
+		ty = (vp.y - pos.y) / dir.y
+	elif dir.y < 0.0:
+		ty = -pos.y / dir.y
+	return minf(tx, ty) + spawn_margin
