@@ -18,9 +18,12 @@ const BROODMOTHER := preload("res://data/enemies/broodmother.tres")
 @export var arc_unlock_sec: Array[float] = [0.0, 210.0, 390.0]
 @export var arc_span_deg := 70.0
 @export var spawn_margin := 60.0
-## Spawn-rate curve: spawns/sec at t=0 plus extra per elapsed minute.
+## Spawn-rate curve: spawns/sec at t=0 plus extra per elapsed minute,
+## capped at max_rate — player power plateaus once upgrades run out
+## (~min 5), so the pressure curve has to plateau too.
 @export var base_rate := 1.0
 @export var rate_per_min := 0.45
+@export var max_rate := 3.0
 ## Enemy HP scaling: +fraction of base HP per elapsed minute.
 @export var hp_scale_per_min := 0.15
 @export var brute_after_sec := 60.0
@@ -48,7 +51,7 @@ func _process(delta: float) -> void:
 	if not active:
 		return
 	elapsed += delta
-	_accum += delta * (base_rate + rate_per_min * elapsed / 60.0)
+	_accum += delta * minf(base_rate + rate_per_min * elapsed / 60.0, max_rate)
 	while _accum >= 1.0:
 		_accum -= 1.0
 		_spawn_one()
