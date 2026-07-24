@@ -12,6 +12,7 @@ extends Node2D
 @onready var tower: Tower = $Tower
 @onready var bolt: BoltWeapon = $Tower/Bolt
 @onready var pulse: PulseWeapon = $Tower/Pulse
+@onready var meteor: MeteorSkill = $Meteor
 @onready var spawner: EnemySpawner = $Spawner
 @onready var info_label: Label = $HUD/InfoLabel
 
@@ -24,6 +25,7 @@ func _ready() -> void:
 	spawner.setup(enemy_pool, tower)
 	bolt.setup(enemy_pool, projectile_pool, tower)
 	pulse.setup(enemy_pool, tower)
+	meteor.setup(enemy_pool, tower)
 
 func _process(delta: float) -> void:
 	if run_over:
