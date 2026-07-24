@@ -1,14 +1,30 @@
 class_name UpgradePool
 extends RefCounted
 
-## Builds the choose-one-of-three offer from current game state.
-## POC content only: summons (repeatable up to the shared cap), the
-## Pulse unlock, and behaviour upgrades — no raw stat passives.
+## Builds the level-up offer from current game state. Offers alternate
+## between two tracks (squad picks on one parity, tower/weapon picks on
+## the other) so the player never has to starve one side to feed the
+## other — and the power envelope per level stays predictable for wave
+## tuning. POC content only: no raw stat passives.
 
 const BRUISER := preload("res://data/summons/bruiser.tres")
 const ARCHER := preload("res://data/summons/archer.tres")
 
-static func roll(main: Node, count: int = 3) -> Array[Dictionary]:
+## Returns {"track": actually-used track, "options": up to `count` picks}.
+## options is empty only when both tracks are exhausted.
+static func roll(main: Node, track: String, count: int = 3) -> Dictionary:
+	var squad_options := _squad_options(main)
+	var tower_options := _tower_options(main)
+	var options := squad_options if track == "squad" else tower_options
+	if options.is_empty():
+		# The chosen track ran dry (cap reached / all taken) — offer the
+		# other one instead of skipping the level.
+		track = "tower" if track == "squad" else "squad"
+		options = tower_options if track == "tower" else squad_options
+	options.shuffle()
+	return {"track": track, "options": options.slice(0, count)}
+
+static func _squad_options(main: Node) -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	if main.squad.total_units() < SummonSquad.MAX_UNITS:
 		options.append({
@@ -23,6 +39,10 @@ static func roll(main: Node, count: int = 3) -> Array[Dictionary]:
 			"desc": "Long-range shooter joins the squad (respawn grows per copy)",
 			"apply": func() -> void: main.squad.try_add_summon(ARCHER),
 		})
+	return options
+
+static func _tower_options(main: Node) -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
 	if not main.pulse.enabled:
 		options.append({
 			"id": "unlock_pulse",
@@ -61,5 +81,4 @@ static func roll(main: Node, count: int = 3) -> Array[Dictionary]:
 			"desc": "Impacts echo once for 50% damage",
 			"apply": func() -> void: main.meteor.aftershock = true,
 		})
-	options.shuffle()
-	return options.slice(0, count)
+	return options

@@ -7,6 +7,7 @@ extends CanvasLayer
 
 signal choice_made
 
+var _title: Label
 var _buttons_box: VBoxContainer
 
 func _ready() -> void:
@@ -31,17 +32,18 @@ func _ready() -> void:
 	vbox.add_theme_constant_override("separation", 10)
 	panel.add_child(vbox)
 
-	var title := Label.new()
-	title.text = "LEVEL UP — choose one"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
+	_title = Label.new()
+	_title.text = "LEVEL UP — choose one"
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(_title)
 
 	_buttons_box = VBoxContainer.new()
 	_buttons_box.add_theme_constant_override("separation", 6)
 	_buttons_box.custom_minimum_size = Vector2(420, 0)
 	vbox.add_child(_buttons_box)
 
-func offer(options: Array[Dictionary]) -> void:
+func offer(options: Array[Dictionary], title: String = "LEVEL UP — choose one") -> void:
+	_title.text = title
 	for child in _buttons_box.get_children():
 		child.queue_free()
 	for opt in options:

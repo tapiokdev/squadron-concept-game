@@ -29,6 +29,7 @@ var xp := 0
 var level := 1
 var pending_levelups := 0
 var pulse_tier := 0
+var _picks_offered := 0
 
 func xp_to_next() -> int:
 	return 15 + (level - 1) * 12
@@ -51,12 +52,16 @@ func _process(delta: float) -> void:
 	if run_over:
 		return
 	if pending_levelups > 0 and not level_up_screen.visible:
-		var options := UpgradePool.roll(self)
-		if options.is_empty():
+		var track := "squad" if _picks_offered % 2 == 0 else "tower"
+		var offer: Dictionary = UpgradePool.roll(self, track)
+		if offer.options.is_empty():
 			pending_levelups = 0
 		else:
 			pending_levelups -= 1
-			level_up_screen.offer(options)
+			_picks_offered += 1
+			var title: String = "LEVEL UP — reinforce your squad" if offer.track == "squad" \
+					else "LEVEL UP — upgrade your tower"
+			level_up_screen.offer(offer.options, title)
 	elapsed += delta
 	if elapsed >= run_duration:
 		_end_run(true)
