@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Swarmer"
+behavior = 0
+max_hp = 8.0
+speed = 70.0
+radius = 7.0
+contact_damage = 4.0
+xp_value = 1
+color = Color(0.9, 0.35, 0.35, 1)

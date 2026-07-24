@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Rusher"
+behavior = 0
+max_hp = 12.0
+speed = 140.0
+radius = 7.0
+contact_damage = 8.0
+xp_value = 2
+color = Color(0.95, 0.75, 0.2, 1)
