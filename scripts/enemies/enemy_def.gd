@@ -14,5 +14,6 @@ enum Behavior { WALKER }
 @export var speed: float = 60.0
 @export var radius: float = 8.0
 @export var contact_damage: float = 5.0
+@export var attack_interval: float = 0.8
 @export var xp_value: int = 1
 @export var color: Color = Color.WHITE

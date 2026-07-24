@@ -11,10 +11,11 @@ const ENEMY_COLLISION_LAYER := 2
 
 var def: EnemyDef
 var hp: float = 0.0
-var target_pos := Vector2.ZERO
+var target: Tower
 
 var _shape: CircleShape2D
 var _active := false
+var _attack_cooldown: float = 0.0
 
 func _init() -> void:
 	collision_layer = ENEMY_COLLISION_LAYER
@@ -31,11 +32,12 @@ func _ready() -> void:
 	# clobbering the set_process(false) from _init — re-assert it here.
 	set_process(_active)
 
-func configure(new_def: EnemyDef, spawn_pos: Vector2, new_target_pos: Vector2) -> void:
+func configure(new_def: EnemyDef, spawn_pos: Vector2, new_target: Tower) -> void:
 	def = new_def
 	hp = def.max_hp
 	global_position = spawn_pos
-	target_pos = new_target_pos
+	target = new_target
+	_attack_cooldown = 0.0
 	_shape.radius = def.radius
 	_active = true
 	visible = true
@@ -50,7 +52,13 @@ func deactivate() -> void:
 	set_deferred("monitorable", false)
 
 func _process(delta: float) -> void:
-	position = position.move_toward(target_pos, def.speed * delta)
+	_attack_cooldown = maxf(_attack_cooldown - delta, 0.0)
+	var reach := def.radius + target.radius
+	if global_position.distance_to(target.global_position) > reach:
+		global_position = global_position.move_toward(target.global_position, def.speed * delta)
+	elif _attack_cooldown == 0.0 and target.alive:
+		target.take_damage(def.contact_damage)
+		_attack_cooldown = def.attack_interval
 
 func take_damage(amount: float) -> void:
 	if not _active:

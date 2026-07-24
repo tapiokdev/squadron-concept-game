@@ -1,10 +1,14 @@
 [gd_scene format=3 uid="uid://402tbyruoehr"]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1_0xm2m"]
-[ext_resource type="Script" path="res://scripts/enemies/enemy_pool.gd" id="2_h2yge"]
+[ext_resource type="Script" uid="uid://dle763bunsqa7" path="res://scripts/main.gd" id="1_0xm2m"]
+[ext_resource type="Script" uid="uid://cvs48mwoll5xo" path="res://scripts/enemies/enemy_pool.gd" id="2_h2yge"]
+[ext_resource type="Script" path="res://scripts/tower.gd" id="3_h2yge"]
 
 [node name="Main" type="Node2D" unique_id=2138863706]
 script = ExtResource("1_0xm2m")
 
 [node name="EnemyPool" type="Node2D" parent="." unique_id=1039799151]
 script = ExtResource("2_h2yge")
+
+[node name="Tower" type="Node2D" parent="." unique_id=200928788]
+script = ExtResource("3_h2yge")
