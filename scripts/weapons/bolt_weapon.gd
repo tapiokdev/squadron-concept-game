@@ -30,7 +30,7 @@ func _process(delta: float) -> void:
 	_cd = maxf(_cd - delta, 0.0)
 	if _cd > 0.0:
 		return
-	var target := _enemies.nearest_live(_tower.position, attack_range)
+	var target := _nearest_visible()
 	if target == null:
 		return
 	_cd = cooldown
@@ -40,3 +40,18 @@ func _process(delta: float) -> void:
 		_projectiles.try_spawn(
 			_tower.position, base_dir.rotated(offset),
 			projectile_speed, damage, attack_range + 80.0, pierce)
+
+## Nearest enemy in range that is also on screen — shooting chaff the
+## player can't see reads as the game playing itself.
+func _nearest_visible() -> Enemy:
+	var view := Rect2(Vector2.ZERO, _tower.get_viewport_rect().size).grow(8.0)
+	var best: Enemy = null
+	var best_dist_sq := attack_range * attack_range
+	for enemy in _enemies.live:
+		if not view.has_point(enemy.global_position):
+			continue
+		var dist_sq := _tower.position.distance_squared_to(enemy.global_position)
+		if dist_sq < best_dist_sq:
+			best_dist_sq = dist_sq
+			best = enemy
+	return best
