@@ -25,6 +25,9 @@ const BROODMOTHER := preload("res://data/enemies/broodmother.tres")
 @export var hp_scale_per_min := 0.15
 @export var brute_after_sec := 60.0
 @export var rusher_after_sec := 90.0
+## Fraction of spawns that roll into each special type once unlocked.
+@export var brute_share := 0.05
+@export var rusher_share := 0.08
 ## The elite moment from the brief (~min 5).
 @export var elite_at_sec := 300.0
 
@@ -67,9 +70,9 @@ func _spawn_one() -> void:
 	var arc: float = arc_centers_deg[randi() % _unlocked_arcs()]
 	var angle := deg_to_rad(arc + randf_range(-0.5, 0.5) * arc_span_deg)
 	var roll := randf()
-	if elapsed >= brute_after_sec and roll < 0.08:
+	if elapsed >= brute_after_sec and roll < brute_share:
 		def = BRUTE
-	elif elapsed >= rusher_after_sec and roll >= 0.08 and roll < 0.16:
+	elif elapsed >= rusher_after_sec and roll >= brute_share and roll < brute_share + rusher_share:
 		def = RUSHER
 		# Rushers come in off-angle to punish tunnel vision on the main arc.
 		angle = randf() * TAU
