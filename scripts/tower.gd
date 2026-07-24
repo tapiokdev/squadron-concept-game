@@ -7,7 +7,7 @@ extends Node2D
 signal hp_changed(hp: float, max_hp: float)
 signal died
 
-@export var max_hp: float = 100.0
+@export var max_hp: float = 140.0
 @export var radius: float = 22.0
 
 var hp: float = 0.0

@@ -20,7 +20,7 @@ const BROODMOTHER := preload("res://data/enemies/broodmother.tres")
 @export var spawn_margin := 60.0
 ## Spawn-rate curve: spawns/sec at t=0 plus extra per elapsed minute.
 @export var base_rate := 1.0
-@export var rate_per_min := 0.7
+@export var rate_per_min := 0.45
 ## Enemy HP scaling: +fraction of base HP per elapsed minute.
 @export var hp_scale_per_min := 0.15
 @export var brute_after_sec := 60.0

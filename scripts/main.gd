@@ -31,7 +31,7 @@ var pending_levelups := 0
 var pulse_boosted := false
 
 func xp_to_next() -> int:
-	return 20 + (level - 1) * 15
+	return 15 + (level - 1) * 12
 
 func _ready() -> void:
 	tower.position = get_viewport_rect().size * 0.5
