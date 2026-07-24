@@ -60,11 +60,21 @@ func deactivate() -> void:
 func _process(delta: float) -> void:
 	_attack_cooldown = maxf(_attack_cooldown - delta, 0.0)
 	var reach := def.radius + target.radius
-	if global_position.distance_to(target.global_position) > reach:
-		global_position = global_position.move_toward(target.global_position, def.speed * delta)
-	elif _attack_cooldown == 0.0 and target.alive:
-		target.take_damage(def.contact_damage)
-		_attack_cooldown = def.attack_interval
+	if global_position.distance_to(target.global_position) <= reach:
+		if _attack_cooldown == 0.0 and target.alive:
+			target.take_damage(def.contact_damage)
+			_attack_cooldown = def.attack_interval
+	else:
+		# A summon standing in the way gets fought instead of walked through.
+		var blocker: Summon = null
+		if _pool.squad != null:
+			blocker = _pool.squad.blocking_unit(global_position, def.radius + 4.0)
+		if blocker != null:
+			if _attack_cooldown == 0.0:
+				blocker.take_damage(def.contact_damage)
+				_attack_cooldown = def.attack_interval
+		else:
+			global_position = global_position.move_toward(target.global_position, def.speed * delta)
 	if def.behavior == EnemyDef.Behavior.SPAWNER and def.spawned_def != null:
 		_spawn_cooldown -= delta
 		if _spawn_cooldown <= 0.0:

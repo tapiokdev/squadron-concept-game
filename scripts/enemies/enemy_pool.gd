@@ -12,6 +12,9 @@ extends Node2D
 @export var max_live: int = 150
 @export var prewarm: int = 48
 
+## Set by main; lets enemies see summons that block their path.
+var squad: SummonSquad
+
 var live_count: int = 0
 var live: Array[Enemy] = []
 

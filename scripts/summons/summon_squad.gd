@@ -27,6 +27,23 @@ func setup(enemies: EnemyPool, tower: Tower) -> void:
 func total_units() -> int:
 	return _units.size()
 
+func enemy_pool() -> EnemyPool:
+	return _enemies
+
+## Nearest active unit whose body is within `reach` of `pos` — used by
+## enemies to decide whether a summon is blocking their path.
+func blocking_unit(pos: Vector2, reach: float) -> Summon:
+	var best: Summon = null
+	var best_gap := INF
+	for unit in _units:
+		if not unit.is_active():
+			continue
+		var gap := pos.distance_to(unit.global_position) - unit.def.radius
+		if gap <= reach and gap < best_gap:
+			best_gap = gap
+			best = unit
+	return best
+
 func count_of(def: SummonDef) -> int:
 	var count := 0
 	for unit in _units:

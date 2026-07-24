@@ -30,6 +30,7 @@ func _ready() -> void:
 	pulse.setup(enemy_pool, tower)
 	meteor.setup(enemy_pool, tower)
 	squad.setup(enemy_pool, tower)
+	enemy_pool.squad = squad
 	# Free starting summon so the rally-point mechanic is engaged
 	# immediately (brief: first offer summon-only OR free start).
 	squad.try_add_summon(BRUISER)
