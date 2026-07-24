@@ -1,28 +1,42 @@
 extends Node2D
 
-## TEMPORARY Phase 2 scaffold: spawns a ring of enemies that walk to the
-## tower to smoke-test the pool and contact damage. Replaced by the real
-## wave spawner in the next Phase 2 step.
+## Run controller: wires the systems together and owns the run timer and
+## win/lose state. End-of-run UI is a later phase; for now the HUD label
+## announces the result.
 
-const SWARMER := preload("res://data/enemies/swarmer.tres")
-const BRUTE := preload("res://data/enemies/brute.tres")
-const RUSHER := preload("res://data/enemies/rusher.tres")
+## Tunable per the brief — 8 min starting point, revisit after playtests.
+@export var run_duration := 480.0
 
 @onready var enemy_pool: EnemyPool = $EnemyPool
 @onready var tower: Tower = $Tower
+@onready var spawner: EnemySpawner = $Spawner
+@onready var info_label: Label = $HUD/InfoLabel
+
+var elapsed := 0.0
+var run_over := false
 
 func _ready() -> void:
 	tower.position = get_viewport_rect().size * 0.5
-	tower.hp_changed.connect(func(hp: float, max_hp: float) -> void:
-		print("[smoke-test] tower hp: %.0f/%.0f" % [hp, max_hp]))
-	tower.died.connect(func() -> void:
-		print("[smoke-test] tower destroyed — run over"))
-	for i in 24:
-		var def: EnemyDef = SWARMER
-		if i % 8 == 3:
-			def = BRUTE
-		elif i % 8 == 6:
-			def = RUSHER
-		var angle := TAU * float(i) / 24.0
-		enemy_pool.try_spawn(def, tower.position + Vector2.from_angle(angle) * 400.0, tower)
-	print("[smoke-test] live enemies: %d" % enemy_pool.live_count)
+	tower.died.connect(_end_run.bind(false))
+	spawner.setup(enemy_pool, tower)
+
+func _process(delta: float) -> void:
+	if run_over:
+		return
+	elapsed += delta
+	if elapsed >= run_duration:
+		_end_run(true)
+		return
+	var remaining := int(run_duration - elapsed)
+	info_label.text = "%d:%02d   HP %d/%d   enemies %d" % [
+		remaining / 60, remaining % 60, roundi(tower.hp), roundi(tower.max_hp),
+		enemy_pool.live_count,
+	]
+
+func _end_run(won: bool) -> void:
+	if run_over:
+		return
+	run_over = true
+	spawner.active = false
+	info_label.text = "YOU SURVIVED" if won else "TOWER DESTROYED"
+	print("[run] over — %s" % ("won" if won else "lost"))

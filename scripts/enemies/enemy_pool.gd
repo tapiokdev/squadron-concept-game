@@ -20,11 +20,11 @@ func _ready() -> void:
 	for i in prewarm:
 		_inactive.append(_create())
 
-func try_spawn(def: EnemyDef, spawn_pos: Vector2, target: Tower) -> Enemy:
+func try_spawn(def: EnemyDef, spawn_pos: Vector2, target: Tower, hp_scale: float = 1.0) -> Enemy:
 	if live_count >= max_live:
 		return null
 	var enemy: Enemy = _inactive.pop_back() if not _inactive.is_empty() else _create()
-	enemy.configure(def, spawn_pos, target)
+	enemy.configure(def, spawn_pos, target, hp_scale)
 	live_count += 1
 	return enemy
 

@@ -1,0 +1,57 @@
+class_name EnemySpawner
+extends Node
+
+## Timed wave spawner. Single spawn arc for now — opening the 2nd/3rd arcs
+## is the Phase 5 wave-scaling pass. Every spawn goes through
+## EnemyPool.try_spawn(), which enforces the global live-count cap; a null
+## return simply drops that spawn.
+
+const SWARMER := preload("res://data/enemies/swarmer.tres")
+const BRUTE := preload("res://data/enemies/brute.tres")
+const RUSHER := preload("res://data/enemies/rusher.tres")
+
+@export var active := false
+@export var arc_center_deg := -90.0
+@export var arc_span_deg := 70.0
+@export var spawn_margin := 60.0
+## Spawn-rate curve: spawns/sec at t=0 plus extra per elapsed minute.
+@export var base_rate := 1.0
+@export var rate_per_min := 0.7
+## Enemy HP scaling: +fraction of base HP per elapsed minute.
+@export var hp_scale_per_min := 0.3
+@export var brute_after_sec := 60.0
+@export var rusher_after_sec := 90.0
+
+var elapsed := 0.0
+
+var _pool: EnemyPool
+var _tower: Tower
+var _accum := 0.0
+
+func setup(pool: EnemyPool, tower: Tower) -> void:
+	_pool = pool
+	_tower = tower
+	active = true
+
+func _process(delta: float) -> void:
+	if not active:
+		return
+	elapsed += delta
+	_accum += delta * (base_rate + rate_per_min * elapsed / 60.0)
+	while _accum >= 1.0:
+		_accum -= 1.0
+		_spawn_one()
+
+func _spawn_one() -> void:
+	var def: EnemyDef = SWARMER
+	var angle := deg_to_rad(arc_center_deg + randf_range(-0.5, 0.5) * arc_span_deg)
+	var roll := randf()
+	if elapsed >= brute_after_sec and roll < 0.08:
+		def = BRUTE
+	elif elapsed >= rusher_after_sec and roll >= 0.08 and roll < 0.16:
+		def = RUSHER
+		# Rushers come in off-angle to punish tunnel vision on the main arc.
+		angle = randf() * TAU
+	var dist := _tower.get_viewport_rect().size.length() * 0.5 + spawn_margin
+	var hp_scale := 1.0 + hp_scale_per_min * elapsed / 60.0
+	_pool.try_spawn(def, _tower.position + Vector2.from_angle(angle) * dist, _tower, hp_scale)

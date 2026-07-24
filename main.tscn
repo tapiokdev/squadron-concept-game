@@ -2,7 +2,8 @@
 
 [ext_resource type="Script" uid="uid://dle763bunsqa7" path="res://scripts/main.gd" id="1_0xm2m"]
 [ext_resource type="Script" uid="uid://cvs48mwoll5xo" path="res://scripts/enemies/enemy_pool.gd" id="2_h2yge"]
-[ext_resource type="Script" path="res://scripts/tower.gd" id="3_h2yge"]
+[ext_resource type="Script" uid="uid://coxiqvlqbfpsk" path="res://scripts/tower.gd" id="3_h2yge"]
+[ext_resource type="Script" path="res://scripts/enemy_spawner.gd" id="4_1bvp3"]
 
 [node name="Main" type="Node2D" unique_id=2138863706]
 script = ExtResource("1_0xm2m")
@@ -12,3 +13,14 @@ script = ExtResource("2_h2yge")
 
 [node name="Tower" type="Node2D" parent="." unique_id=200928788]
 script = ExtResource("3_h2yge")
+
+[node name="Spawner" type="Node" parent="." unique_id=20111829]
+script = ExtResource("4_1bvp3")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=215657380]
+
+[node name="InfoLabel" type="Label" parent="HUD" unique_id=1713443938]
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 13.0
+offset_bottom = 31.0

@@ -32,9 +32,9 @@ func _ready() -> void:
 	# clobbering the set_process(false) from _init — re-assert it here.
 	set_process(_active)
 
-func configure(new_def: EnemyDef, spawn_pos: Vector2, new_target: Tower) -> void:
+func configure(new_def: EnemyDef, spawn_pos: Vector2, new_target: Tower, hp_scale: float = 1.0) -> void:
 	def = new_def
-	hp = def.max_hp
+	hp = def.max_hp * hp_scale
 	global_position = spawn_pos
 	target = new_target
 	_attack_cooldown = 0.0
