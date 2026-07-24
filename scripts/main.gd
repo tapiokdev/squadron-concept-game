@@ -86,5 +86,12 @@ func _end_run(won: bool) -> void:
 		return
 	run_over = true
 	spawner.active = false
-	info_label.text = "YOU SURVIVED" if won else "TOWER DESTROYED"
-	print("[run] over — %s" % ("won" if won else "lost"))
+	var survived := int(elapsed)
+	var total := int(run_duration)
+	if won:
+		info_label.text = "YOU SURVIVED — %d:%02d" % [int(total / 60.0), total % 60]
+	else:
+		info_label.text = "TOWER DESTROYED — survived %d:%02d of %d:%02d" % [
+			int(survived / 60.0), survived % 60, int(total / 60.0), total % 60,
+		]
+	print("[run] over — %s at %ds" % ["won" if won else "lost", survived])
