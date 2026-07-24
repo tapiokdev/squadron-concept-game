@@ -18,6 +18,7 @@ extends Node2D
 const BRUISER := preload("res://data/summons/bruiser.tres")
 @onready var spawner: EnemySpawner = $Spawner
 @onready var info_label: Label = $HUD/InfoLabel
+@onready var level_up_screen: LevelUpScreen = $LevelUpScreen
 
 var elapsed := 0.0
 var run_over := false
@@ -27,6 +28,7 @@ var run_over := false
 var xp := 0
 var level := 1
 var pending_levelups := 0
+var pulse_boosted := false
 
 func xp_to_next() -> int:
 	return 20 + (level - 1) * 15
@@ -48,6 +50,13 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if run_over:
 		return
+	if pending_levelups > 0 and not level_up_screen.visible:
+		var options := UpgradePool.roll(self)
+		if options.is_empty():
+			pending_levelups = 0
+		else:
+			pending_levelups -= 1
+			level_up_screen.offer(options)
 	elapsed += delta
 	if elapsed >= run_duration:
 		_end_run(true)
