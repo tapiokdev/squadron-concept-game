@@ -167,8 +167,8 @@ Self-paced (no external deadline). Ordering still holds; dates dropped for the P
 | 3. LMB active skill | Cursor-aimed cooldown meteor, playable core loop | ✅ Done |
 | 4. Summon system | Rally points, stacking, unit cap, 2 summon types | ✅ Done |
 | 5. Upgrade loop | XP, level-up screen, all upgrade content, wave/multi-lane scaling | ✅ Done |
-| 6. Art, audio, and feel | Assets, hit flash, screen shake, SFX, music | Next |
-| 7. Playtest and fix | Outside playtests, crash fixes, browser optimisation | Pending |
+| 6. Art, audio, and feel | Assets, hit flash, screen shake, SFX, music | ✅ Done except music |
+| 7. Playtest and fix | Outside playtests, crash fixes, browser optimisation | Next |
 | 8. Publish | itch.io page, gif/trailer, web export, publish | Pending |
 
 ---
@@ -183,6 +183,27 @@ Self-paced (no external deadline). Ordering still holds; dates dropped for the P
 - **Multi-lane:** 1 → 2 (min 3–4) → 3 (min 6.5) spawn arcs.
 - **Perf budget:** ~150–200 concurrent enemies; pooling + lightweight `Area2D` enemies mandatory.
 - **Browser input:** suppress the right-click context menu (RMB = rally point).
+
+---
+
+## Art direction (locked in Phase 6)
+Neon sci-fi vector, no sprites or audio assets anywhere — everything is drawn
+from primitives and every sound is synthesised at load. Chosen because the POC
+has no artist, and geometry plus a disciplined palette reads as deliberate where
+generated art would not.
+
+- **Fiction:** the tower is a stationary **mothership**; enemies are a hostile fleet.
+- **Colour rule:** cool blues are yours, warm and magenta is hostile, green is
+  your own orders (the rally point). `Palette` owns every colour in the game.
+- **Glow:** real HDR bloom — `hdr_2d` plus a WorldEnvironment with Canvas
+  background. `Palette.neon()` for anything whose colour carries meaning (it
+  preserves hue), `Palette.hot()` where blowing out to white is the point.
+- **Type is shape first, colour second.** In a 130-ship swarm the silhouette is
+  what the player actually reads.
+- **Web budget discipline:** all sparks batch into one draw call from `FxLayer`;
+  facing is a transform write and hit flash is `modulate`, so neither costs a
+  redraw. Verified 133 concurrent enemies at 144 fps.
+- **Still open:** music.
 
 ---
 
