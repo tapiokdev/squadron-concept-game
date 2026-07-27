@@ -100,18 +100,7 @@ func _build_grid() -> void:
 ## translucent discs was the texture-free option but banded visibly; a
 ## 256px gradient is smooth, and it collapses each cloud to one draw call.
 func _build_nebula_texture() -> void:
-	var gradient := Gradient.new()
-	gradient.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_CUBIC
-	gradient.set_color(0, Color(1, 1, 1, 1))
-	gradient.set_color(1, Color(1, 1, 1, 0))
-	gradient.add_point(0.45, Color(1, 1, 1, 0.42))
-	_nebula_tex = GradientTexture2D.new()
-	_nebula_tex.gradient = gradient
-	_nebula_tex.fill = GradientTexture2D.FILL_RADIAL
-	_nebula_tex.fill_from = Vector2(0.5, 0.5)
-	_nebula_tex.fill_to = Vector2(1.0, 0.5)
-	_nebula_tex.width = NEBULA_TEX_SIZE
-	_nebula_tex.height = NEBULA_TEX_SIZE
+	_nebula_tex = GlowTexture.radial(NEBULA_TEX_SIZE, 0.45, 0.42)
 
 func _build_clouds() -> void:
 	# Placed proportionally so they survive a resize, and kept off-centre

@@ -1,8 +1,16 @@
 class_name Tower
 extends Node2D
 
-## The player: a stationary tower. No movement — all agency comes from
-## skills and summons. If it dies, the run ends.
+## The player: a stationary mothership. No movement — all agency comes
+## from skills and summons. If it dies, the run ends.
+##
+## Art note: `radius` is the combat radius, and enemies stop at their own
+## radius plus this one, so the solid hull is drawn inside it and only
+## the shield ring — obviously energy, not plating — extends past it.
+## Radial bands are shared with other systems and deliberately spaced so
+## they stay separable at actual size: radius+4 is the hull integrity ring
+## below, radius+11 is the meteor recharge ring drawn by MeteorSkill, and
+## the rotating shield arcs sit furthest out.
 
 signal hp_changed(hp: float, max_hp: float)
 signal died
@@ -10,31 +18,120 @@ signal died
 @export var max_hp: float = 140.0
 @export var radius: float = 22.0
 
+const HULL_SIDES := 6
+const SHIELD_ARCS := 3
+const HIT_FLASH_TIME := 0.22
+const SPIN_RATE := 0.34
+
 var hp: float = 0.0
 var alive := true
 
+var _hull := PackedVector2Array()
+var _hull_loop := PackedVector2Array()
+var _core := PackedVector2Array()
+var _core_loop := PackedVector2Array()
+var _spin := 0.0
+var _pulse := 0.0
+var _hit_flash := 0.0
+
 func _ready() -> void:
 	hp = max_hp
+	# The silhouette never changes shape, only colour and spin, so the
+	# point rings are built once.
+	_hull = Shapes.ngon(radius, HULL_SIDES)
+	_hull_loop = Shapes.closed(_hull)
+	_core = Shapes.ngon(radius * 0.5, HULL_SIDES)
+	_core_loop = Shapes.closed(_core)
+
+func _process(delta: float) -> void:
+	var health := _health()
+	_spin += delta * SPIN_RATE
+	# The reactor beats faster the closer the hull is to failing — an
+	# alarm the player reads without looking at the number.
+	_pulse += delta * lerpf(2.0, 7.5, 1.0 - health)
+	if _hit_flash > 0.0:
+		_hit_flash = maxf(_hit_flash - delta, 0.0)
+	queue_redraw()
+
+func _health() -> float:
+	return clampf(hp / max_hp, 0.0, 1.0) if max_hp > 0.0 else 0.0
 
 func heal(amount: float) -> void:
 	if not alive:
 		return
 	hp = minf(hp + amount, max_hp)
+	FxLayer.ring(global_position, Palette.HEAL, radius * 0.4, radius * 2.6, 0.5, 3.0)
+	FxLayer.burst(global_position, Palette.HEAL, 14, 130.0, 0.7)
 	hp_changed.emit(hp, max_hp)
 
 func take_damage(amount: float) -> void:
 	if not alive:
 		return
 	hp = maxf(hp - amount, 0.0)
+	_hit_flash = HIT_FLASH_TIME
 	# Capped so a swarm landing together still shakes hard without
 	# turning the screen into a blender.
 	GameCamera.shake(minf(0.22 + amount * 0.012, 0.75))
+	FxLayer.ring(global_position, Palette.DANGER, radius * 0.8, radius * 2.0, 0.25, 2.5)
 	hp_changed.emit(hp, max_hp)
 	if hp <= 0.0:
 		alive = false
+		_explode()
 		died.emit()
 
+func _explode() -> void:
+	FxLayer.flash(global_position, Palette.TOWER_CORE, radius * 2.6, 0.5)
+	FxLayer.ring(global_position, Palette.TOWER, radius, radius * 10.0, 0.9, 6.0)
+	FxLayer.burst(global_position, Palette.TOWER, 44, 430.0, 1.1)
+	GameCamera.shake(1.0)
+
 func _draw() -> void:
-	# Placeholder visual until the art pass.
-	draw_circle(Vector2.ZERO, radius, Color(0.75, 0.78, 0.85))
-	draw_circle(Vector2.ZERO, radius * 0.55, Color(0.35, 0.55, 0.9))
+	if not alive:
+		_draw_wreck()
+		return
+	var health := _health()
+	# Hull lighting slides toward the danger colour as the ship is chewed
+	# up, so damage is legible from the silhouette alone.
+	var edge := Palette.TOWER.lerp(Palette.DANGER, (1.0 - health) * 0.85)
+	_draw_shield(health)
+	draw_colored_polygon(_hull, Palette.HULL)
+	draw_polyline(_hull_loop, Palette.hot(edge, 1.9), 2.0)
+	for i in HULL_SIDES:
+		draw_line(_core[i], _hull[i], Palette.hot(edge, 1.1), 1.5)
+	draw_colored_polygon(_core, Palette.HULL)
+	draw_polyline(_core_loop, Palette.hot(Palette.TOWER_CORE, 1.5), 1.5)
+	var beat := 0.5 + 0.5 * sin(_pulse)
+	draw_circle(Vector2.ZERO, radius * (0.17 + 0.06 * beat),
+		Palette.hot(Palette.TOWER_CORE, 2.0 + beat))
+	if _hit_flash > 0.0:
+		var flash := _hit_flash / HIT_FLASH_TIME
+		draw_polyline(_hull_loop, Palette.hot(Palette.DANGER, 1.0 + 3.0 * flash), 3.0)
+	_draw_hull_ring(health)
+
+## Segmented shield ring. Segments go dark as the hull is worn down, so
+## the ship's condition reads at a glance from across the screen.
+func _draw_shield(health: float) -> void:
+	var ring_radius := radius * 1.85
+	var sweep := TAU / float(SHIELD_ARCS) * 0.52
+	var lit := maxi(1, ceili(SHIELD_ARCS * health))
+	for i in SHIELD_ARCS:
+		var start := _spin + TAU * float(i) / float(SHIELD_ARCS)
+		var color := Palette.hot(Palette.TOWER, 1.6) if i < lit \
+				else Palette.fade(Palette.TOWER, 0.16)
+		draw_arc(Vector2.ZERO, ring_radius, start, start + sweep, 16, color, 2.5, true)
+
+func _draw_hull_ring(health: float) -> void:
+	var ring_radius := radius + 4.0
+	draw_arc(Vector2.ZERO, ring_radius, 0.0, TAU, 40, Palette.fade(Palette.TOWER, 0.14), 2.5)
+	if health <= 0.0:
+		return
+	# Kept dimmer than the shield arcs: this is a gauge, and the arcs are
+	# what should carry the ship's silhouette from across the screen.
+	var color := Palette.TOWER.lerp(Palette.DANGER, clampf((1.0 - health) * 1.4, 0.0, 1.0))
+	draw_arc(Vector2.ZERO, ring_radius, -PI * 0.5, -PI * 0.5 + TAU * health, 40,
+		Palette.hot(color, 1.5), 2.5)
+
+func _draw_wreck() -> void:
+	draw_colored_polygon(_hull, Color(0.05, 0.04, 0.05, 0.95))
+	draw_polyline(_hull_loop, Palette.fade(Palette.DANGER, 0.5), 2.0)
+	draw_polyline(_core_loop, Palette.fade(Palette.DANGER, 0.3), 1.5)

@@ -30,6 +30,9 @@ var _explosion_left := 0.0
 func setup(enemies: EnemyPool, tower: Tower) -> void:
 	_enemies = enemies
 	_tower = tower
+	# Idle-and-ready queues no redraws, so without this the recharge ring
+	# would still be sitting on the canvas after the mothership blows up.
+	_tower.died.connect(queue_redraw)
 
 func is_ready() -> bool:
 	return _cd <= 0.0 and _impact_in < 0.0
@@ -98,9 +101,12 @@ func _draw() -> void:
 ## The brief requires an always-visible cooldown indicator: a recharge
 ## ring around the tower that fills clockwise and lights up when ready.
 func _draw_cooldown_ring() -> void:
-	if _tower == null:
+	# Nothing left to recharge once the mothership is a wreck.
+	if _tower == null or not _tower.alive:
 		return
-	var ring_radius := _tower.radius + 8.0
+	# Sits in the band the tower reserves for it, clear of the hull
+	# integrity ring inside and the shield arcs outside.
+	var ring_radius := _tower.radius + 11.0
 	if is_ready():
 		draw_arc(_tower.position, ring_radius, 0.0, TAU, 40, Color(1.0, 0.6, 0.2, 0.9), 3.0)
 		return

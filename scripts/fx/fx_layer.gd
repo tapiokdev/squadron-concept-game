@@ -45,6 +45,7 @@ var _flashes: Array[Dictionary] = []
 var _line_points := PackedVector2Array()
 var _line_colors := PackedColorArray()
 var _was_busy := false
+var _glow_tex: GradientTexture2D
 
 # --- Static API ----------------------------------------------------------
 
@@ -72,6 +73,8 @@ func _ready() -> void:
 	instance = self
 	# Above units, below the HUD (which is on its own CanvasLayer).
 	z_index = 40
+	# Tight core, wide halo — an explosion, not a disc of paint.
+	_glow_tex = GlowTexture.radial(128, 0.3, 0.42)
 	_pos.resize(MAX_SPARKS)
 	_vel.resize(MAX_SPARKS)
 	_life.resize(MAX_SPARKS)
@@ -159,7 +162,9 @@ func _draw() -> void:
 		var t: float = flash_fx.life / flash_fx.life_max
 		var color: Color = Palette.hot(flash_fx.color, 1.2 + 2.4 * t)
 		color.a = flash_fx.color.a * t * 0.9
-		draw_circle(flash_fx.pos, flash_fx.radius * (0.6 + 0.4 * (1.0 - t)), color)
+		var span: float = flash_fx.radius * (0.6 + 0.4 * (1.0 - t))
+		draw_texture_rect(_glow_tex,
+			Rect2(flash_fx.pos - Vector2(span, span), Vector2(span, span) * 2.0), false, color)
 	for ring_fx in _rings:
 		var t: float = ring_fx.life / ring_fx.life_max
 		# Fast out of the gate, easing into the final radius.
