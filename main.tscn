@@ -15,6 +15,7 @@
 [ext_resource type="Environment" path="res://data/fx/neon_env.tres" id="12_ycdy4"]
 [ext_resource type="Script" uid="uid://qhrd1qio6xrm" path="res://scripts/fx/fx_layer.gd" id="13_w48qg"]
 [ext_resource type="Script" uid="uid://cmlyvg1boj2c4" path="res://scripts/fx/game_camera.gd" id="14_vivmo"]
+[ext_resource type="Script" uid="uid://bfc782dtykup5" path="res://scripts/fx/sfx.gd" id="16_2cqfq"]
 
 [node name="Main" type="Node2D" unique_id=2138863706]
 script = ExtResource("1_0xm2m")
@@ -60,3 +61,6 @@ script = ExtResource("13_w48qg")
 
 [node name="Camera" type="Camera2D" parent="." unique_id=1800412041]
 script = ExtResource("14_vivmo")
+
+[node name="Sfx" type="Node" parent="." unique_id=908569530]
+script = ExtResource("16_2cqfq")

@@ -64,6 +64,7 @@ func offer(options: Array[Dictionary], title: String = "LEVEL UP — choose one"
 		_buttons_box.add_child(_make_card(opt, accent))
 	visible = true
 	get_tree().paused = true
+	Sfx.play(&"level", 1.0, -7.0)
 	# Let a keyboard or gamepad player commit without reaching for the
 	# mouse; the first card is focused as soon as the box lays out.
 	if not _buttons_box.get_children().is_empty():

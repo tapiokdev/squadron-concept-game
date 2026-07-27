@@ -91,6 +91,8 @@ func _impact() -> void:
 	FxLayer.burst(_pending_pos, Palette.METEOR, roundi(24.0 * mult) + 8,
 		_impact_radius * 4.0, 0.6)
 	GameCamera.shake(0.12 + 0.62 * mult)
+	# The echo is the same strike, further away and smaller.
+	Sfx.play(&"meteor", 1.0 if mult >= 1.0 else 1.35, -4.0 if mult >= 1.0 else -11.0)
 	if aftershock and not _aftershock_next:
 		_aftershock_next = true
 		_incoming = false

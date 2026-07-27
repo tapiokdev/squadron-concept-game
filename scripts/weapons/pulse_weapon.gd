@@ -44,6 +44,7 @@ func _process(delta: float) -> void:
 		FxLayer.ring(_tower.position, Palette.PULSE, radius * 0.2, radius, FLASH_TIME, 4.0)
 		FxLayer.flash(_tower.position, Palette.PULSE, radius * 0.35, 0.16)
 		GameCamera.shake(0.14)
+		Sfx.play(&"pulse", 1.0, -9.0)
 		queue_redraw()
 
 ## The expanding wave is an FX-layer ring; this is just the residual wash

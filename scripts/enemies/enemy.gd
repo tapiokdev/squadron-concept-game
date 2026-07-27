@@ -176,6 +176,8 @@ func die() -> void:
 	# swarmer and a wiped-out swarm still reads as one big event.
 	var shards := clampi(roundi(def.radius * 0.8), 5, 18)
 	FxLayer.burst(global_position, def.color, shards, def.radius * 9.0, 0.42)
+	# One pop sample covers the whole roster: bigger hull, lower pitch.
+	Sfx.play(&"kill", clampf(9.0 / maxf(def.radius, 1.0), 0.45, 1.7), -12.0)
 	if def.radius >= 14.0:
 		FxLayer.ring(global_position, def.color, def.radius * 0.6, def.radius * 2.8, 0.3, 3.0)
 	died.emit(self)

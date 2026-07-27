@@ -62,6 +62,7 @@ func heal(amount: float) -> void:
 	hp = minf(hp + amount, max_hp)
 	FxLayer.ring(global_position, Palette.HEAL, radius * 0.4, radius * 2.6, 0.5, 3.0)
 	FxLayer.burst(global_position, Palette.HEAL, 14, 130.0, 0.7)
+	Sfx.play(&"summon", 0.8, -8.0)
 	hp_changed.emit(hp, max_hp)
 
 func take_damage(amount: float) -> void:
@@ -73,6 +74,7 @@ func take_damage(amount: float) -> void:
 	# turning the screen into a blender.
 	GameCamera.shake(minf(0.22 + amount * 0.012, 0.75))
 	FxLayer.ring(global_position, Palette.DANGER, radius * 0.8, radius * 2.0, 0.25, 2.5)
+	Sfx.play(&"hull", randf_range(0.92, 1.08), -6.0)
 	hp_changed.emit(hp, max_hp)
 	if hp <= 0.0:
 		alive = false
@@ -84,6 +86,8 @@ func _explode() -> void:
 	FxLayer.ring(global_position, Palette.TOWER, radius, radius * 10.0, 0.9, 6.0)
 	FxLayer.burst(global_position, Palette.TOWER, 44, 430.0, 1.1)
 	GameCamera.shake(1.0)
+	# The strike sample pitched right down doubles as the hull going up.
+	Sfx.play(&"meteor", 0.55, -1.0)
 
 func _draw() -> void:
 	if not alive:

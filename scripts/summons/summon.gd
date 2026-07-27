@@ -53,6 +53,7 @@ func configure(squad: SummonSquad, new_def: SummonDef, spawn_pos: Vector2) -> vo
 	# Warp-in, matching how the brood arrives — a unit that simply blinks
 	# into existence at the tower reads as a glitch.
 	FxLayer.ring(spawn_pos, def.color, def.radius * 3.0, def.radius * 0.6, 0.3, 2.0)
+	Sfx.play(&"summon", 1.0, -11.0)
 	queue_redraw()
 
 func _build_hull() -> void:
