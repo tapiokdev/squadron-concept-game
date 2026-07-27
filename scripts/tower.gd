@@ -26,6 +26,9 @@ func take_damage(amount: float) -> void:
 	if not alive:
 		return
 	hp = maxf(hp - amount, 0.0)
+	# Capped so a swarm landing together still shakes hard without
+	# turning the screen into a blender.
+	GameCamera.shake(minf(0.22 + amount * 0.012, 0.75))
 	hp_changed.emit(hp, max_hp)
 	if hp <= 0.0:
 		alive = false

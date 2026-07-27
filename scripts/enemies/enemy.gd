@@ -94,6 +94,12 @@ func die() -> void:
 	if not _active:
 		return
 	deactivate()
+	# Debris scaled by body size, so a brute comes apart harder than a
+	# swarmer and a wiped-out swarm still reads as one big event.
+	var shards := clampi(roundi(def.radius * 0.8), 5, 18)
+	FxLayer.burst(global_position, def.color, shards, def.radius * 9.0, 0.42)
+	if def.radius >= 14.0:
+		FxLayer.ring(global_position, def.color, def.radius * 0.6, def.radius * 2.8, 0.3, 3.0)
 	died.emit(self)
 
 func _draw() -> void:

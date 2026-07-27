@@ -12,6 +12,8 @@
 [ext_resource type="Script" uid="uid://cspf6mhpa34gy" path="res://scripts/summons/summon_squad.gd" id="9_kek77"]
 [ext_resource type="Script" uid="uid://cq0dswfdd6141" path="res://scripts/level_up_screen.gd" id="10_4c57u"]
 [ext_resource type="Environment" path="res://data/fx/neon_env.tres" id="12_ycdy4"]
+[ext_resource type="Script" uid="uid://qhrd1qio6xrm" path="res://scripts/fx/fx_layer.gd" id="13_w48qg"]
+[ext_resource type="Script" uid="uid://cmlyvg1boj2c4" path="res://scripts/fx/game_camera.gd" id="14_vivmo"]
 
 [node name="Main" type="Node2D" unique_id=2138863706]
 script = ExtResource("1_0xm2m")
@@ -56,3 +58,9 @@ script = ExtResource("10_4c57u")
 
 [node name="Glow" type="WorldEnvironment" parent="." unique_id=509950377]
 environment = ExtResource("12_ycdy4")
+
+[node name="Fx" type="Node2D" parent="." unique_id=1355396536]
+script = ExtResource("13_w48qg")
+
+[node name="Camera" type="Camera2D" parent="." unique_id=1800412041]
+script = ExtResource("14_vivmo")
