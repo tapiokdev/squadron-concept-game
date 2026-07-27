@@ -35,6 +35,11 @@ func _process(delta: float) -> void:
 		return
 	_cd = cooldown
 	var base_dir := (target.global_position - _tower.position).normalized()
+	# Muzzle flash on the hull edge, so the mothership visibly does the
+	# shooting instead of bolts appearing out of its middle.
+	var muzzle := _tower.position + base_dir * _tower.radius
+	FxLayer.flash(muzzle, Palette.BOLT, 11.0, 0.1)
+	FxLayer.burst(muzzle, Palette.BOLT, 3, 110.0, 0.16, base_dir.angle(), 0.9)
 	for i in spread_count:
 		var offset := deg_to_rad(spread_step_deg) * (float(i) - (spread_count - 1) * 0.5)
 		_projectiles.try_spawn(

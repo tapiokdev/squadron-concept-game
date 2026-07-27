@@ -32,6 +32,9 @@ func _ready() -> void:
 func configure(spawn_pos: Vector2, direction: Vector2, speed: float, new_damage: float, new_max_range: float, pierce: int = 0) -> void:
 	global_position = spawn_pos
 	velocity = direction.normalized() * speed
+	# Bolts fly straight, so orienting once on spawn is enough and the
+	# streak never has to be redrawn.
+	rotation = velocity.angle()
 	damage = new_damage
 	_life_left = new_max_range / speed
 	_hits_left = 1 + pierce
@@ -57,6 +60,10 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 	if area is Enemy:
 		area.take_damage(damage)
+		# Sparks kick back along the bolt's path, so a hit reads as an
+		# impact rather than the bolt simply vanishing.
+		FxLayer.burst(global_position, Palette.BOLT, 4, 90.0, 0.22,
+			velocity.angle() + PI, PI * 0.7)
 		_hits_left -= 1
 		if _hits_left <= 0:
 			_despawn()
@@ -67,5 +74,8 @@ func _despawn() -> void:
 	deactivate()
 	despawned.emit(self)
 
+## A streak along +X (the node is rotated to the heading on spawn), with
+## a white-hot head — a dot gives no sense of direction or speed.
 func _draw() -> void:
-	draw_circle(Vector2.ZERO, 4.0, Color(0.85, 0.95, 1.0))
+	draw_line(Vector2(-9.0, 0.0), Vector2(3.0, 0.0), Palette.neon(Palette.BOLT, 1.5), 3.0)
+	draw_circle(Vector2(3.0, 0.0), 3.0, Palette.hot(Palette.BOLT, 2.4))

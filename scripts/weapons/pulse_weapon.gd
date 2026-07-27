@@ -39,11 +39,17 @@ func _process(delta: float) -> void:
 	if hit_any:
 		_cd = cooldown
 		_flash = FLASH_TIME
+		# The wave travelling outward is what sells this as a discharge;
+		# a ring that simply appears at full size reads as a UI overlay.
+		FxLayer.ring(_tower.position, Palette.PULSE, radius * 0.2, radius, FLASH_TIME, 4.0)
+		FxLayer.flash(_tower.position, Palette.PULSE, radius * 0.35, 0.16)
+		GameCamera.shake(0.14)
 		queue_redraw()
 
+## The expanding wave is an FX-layer ring; this is just the residual wash
+## of light inside it while the capacitor dumps.
 func _draw() -> void:
 	if _flash <= 0.0:
 		return
 	var alpha := _flash / FLASH_TIME
-	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 48, Color(0.5, 0.8, 1.0, alpha), 3.0)
-	draw_circle(Vector2.ZERO, radius, Color(0.5, 0.8, 1.0, alpha * 0.15))
+	draw_circle(Vector2.ZERO, radius, Palette.fade(Palette.PULSE, alpha * 0.12))
