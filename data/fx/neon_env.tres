@@ -1,0 +1,28 @@
+[gd_resource type="Environment" format=3]
+
+; Bloom pass that turns every HDR colour in the game into neon. Background
+; mode is Canvas so the 2D canvas feeds the post-process chain — with any
+; other mode the glow would only see (empty) 3D geometry. Requires
+; rendering/viewport/hdr_2d so Palette.hot() colours can exceed 1.0.
+
+[resource]
+background_mode = 3
+ambient_light_source = 0
+tonemap_mode = 0
+glow_enabled = true
+glow_normalized = false
+glow_intensity = 1.1
+glow_strength = 1.0
+glow_mix = 0.05
+glow_bloom = 0.05
+glow_blend_mode = 1
+glow_hdr_threshold = 1.0
+glow_hdr_scale = 2.0
+glow_hdr_luminance_cap = 12.0
+glow_levels/1 = 0.4
+glow_levels/2 = 0.8
+glow_levels/3 = 1.0
+glow_levels/4 = 0.7
+glow_levels/5 = 0.4
+glow_levels/6 = 0.0
+glow_levels/7 = 0.0

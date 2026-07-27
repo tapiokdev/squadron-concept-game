@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://402tbyruoehr"]
 
 [ext_resource type="Script" uid="uid://dle763bunsqa7" path="res://scripts/main.gd" id="1_0xm2m"]
+[ext_resource type="Script" uid="uid://ba5lt2t02a0yo" path="res://scripts/fx/space_backdrop.gd" id="2_dg77c"]
 [ext_resource type="Script" uid="uid://cvs48mwoll5xo" path="res://scripts/enemies/enemy_pool.gd" id="2_h2yge"]
 [ext_resource type="Script" uid="uid://coxiqvlqbfpsk" path="res://scripts/tower.gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://blq07ni462w1i" path="res://scripts/enemy_spawner.gd" id="4_1bvp3"]
@@ -9,10 +10,14 @@
 [ext_resource type="Script" uid="uid://cl5gi1cvtvj0w" path="res://scripts/projectile_pool.gd" id="6_272bh"]
 [ext_resource type="Script" uid="uid://cudwacynjo7e2" path="res://scripts/skills/meteor_skill.gd" id="8_5vw27"]
 [ext_resource type="Script" uid="uid://cspf6mhpa34gy" path="res://scripts/summons/summon_squad.gd" id="9_kek77"]
-[ext_resource type="Script" path="res://scripts/level_up_screen.gd" id="10_4c57u"]
+[ext_resource type="Script" uid="uid://cq0dswfdd6141" path="res://scripts/level_up_screen.gd" id="10_4c57u"]
+[ext_resource type="Environment" path="res://data/fx/neon_env.tres" id="12_ycdy4"]
 
 [node name="Main" type="Node2D" unique_id=2138863706]
 script = ExtResource("1_0xm2m")
+
+[node name="Backdrop" type="Node2D" parent="." unique_id=1558765730]
+script = ExtResource("2_dg77c")
 
 [node name="EnemyPool" type="Node2D" parent="." unique_id=1039799151]
 script = ExtResource("2_h2yge")
@@ -48,3 +53,6 @@ script = ExtResource("9_kek77")
 
 [node name="LevelUpScreen" type="CanvasLayer" parent="." unique_id=848426850]
 script = ExtResource("10_4c57u")
+
+[node name="Glow" type="WorldEnvironment" parent="." unique_id=509950377]
+environment = ExtResource("12_ycdy4")
