@@ -11,4 +11,5 @@ speed = 35.0
 radius = 16.0
 contact_damage = 20.0
 xp_value = 8
-color = Color(0.55, 0.2, 0.6, 1)
+silhouette = 2
+color = Color(0.62, 0.3, 1, 1)

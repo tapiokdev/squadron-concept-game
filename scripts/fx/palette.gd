@@ -43,8 +43,25 @@ const HULL := Color(0.055, 0.075, 0.125, 0.90)
 
 ## Push a colour into HDR so the glow pass picks it up. Roughly: 1.0 sits
 ## at the bloom threshold, 2 is a bright filament, 4+ blows out to white.
+## Use where blowing out is the point — reactor cores, impact flashes,
+## sparks that should read as white-hot before they cool.
 static func hot(color: Color, gain: float = 2.0) -> Color:
 	return Color(color.r * gain, color.g * gain, color.b * gain, color.a)
+
+## Brightest channel lands exactly on `gain`, so the hue survives.
+##
+## A flat multiply clips channels one at a time and shifts the hue on the
+## way: amber (1.0, 0.62, 0.12) at gain 1.8 clips red first and arrives as
+## yellow, which costs the player the ability to tell a rusher from a
+## broodmother at a glance. Scaling to a known peak keeps the ratios, so
+## a gain just over 1.0 still blooms while staying the right colour. Use
+## this for anything whose colour carries meaning.
+static func neon(color: Color, gain: float = 1.2) -> Color:
+	var peak := maxf(color.r, maxf(color.g, color.b))
+	if peak <= 0.0:
+		return color
+	var scale := gain / peak
+	return Color(color.r * scale, color.g * scale, color.b * scale, color.a)
 
 ## Same colour at a different opacity — scales the existing alpha rather
 ## than replacing it, so a colour's designed transparency is preserved.
