@@ -17,7 +17,7 @@ extends Node2D
 
 const BRUISER := preload("res://data/summons/bruiser.tres")
 @onready var spawner: EnemySpawner = $Spawner
-@onready var info_label: Label = $HUD/InfoLabel
+@onready var hud: Hud = $HUD
 @onready var level_up_screen: LevelUpScreen = $LevelUpScreen
 
 var elapsed := 0.0
@@ -66,11 +66,8 @@ func _process(delta: float) -> void:
 	if elapsed >= run_duration:
 		_end_run(true)
 		return
-	var remaining := int(run_duration - elapsed)
-	info_label.text = "%d:%02d   HP %d/%d   LV %d  XP %d/%d   enemies %d" % [
-		int(remaining / 60.0), remaining % 60, roundi(tower.hp), roundi(tower.max_hp),
-		level, xp, xp_to_next(), enemy_pool.live_count,
-	]
+	hud.update_run(run_duration - elapsed, tower.hp, tower.max_hp,
+		level, xp, xp_to_next(), enemy_pool.live_count)
 
 func _on_enemy_killed(amount: int) -> void:
 	if run_over:
@@ -88,10 +85,14 @@ func _end_run(won: bool) -> void:
 	spawner.active = false
 	var survived := int(elapsed)
 	var total := int(run_duration)
+	# _process bails once the run is over, so push the final numbers in
+	# by hand — otherwise the readout freezes on the last frame's values.
+	hud.update_run(run_duration - elapsed, tower.hp, tower.max_hp,
+		level, xp, xp_to_next(), enemy_pool.live_count)
 	if won:
-		info_label.text = "YOU SURVIVED — %d:%02d" % [int(total / 60.0), total % 60]
+		hud.show_result("YOU SURVIVED\n%d:%02d" % [total / 60, total % 60])
 	else:
-		info_label.text = "TOWER DESTROYED — survived %d:%02d of %d:%02d" % [
-			int(survived / 60.0), survived % 60, int(total / 60.0), total % 60,
-		]
+		hud.show_result("MOTHERSHIP DESTROYED\nsurvived %d:%02d of %d:%02d" % [
+			survived / 60, survived % 60, total / 60, total % 60,
+		])
 	print("[run] over — %s at %ds" % ["won" if won else "lost", survived])
