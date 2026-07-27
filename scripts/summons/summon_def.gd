@@ -5,7 +5,13 @@ extends Resource
 ## same type again in the upgrade screen adds another unit (stacking);
 ## respawn time grows per extra copy — see SummonSquad.
 
+## Hull frame. BRAWLER is the broad shielded drone that holds a line;
+## LANCER is the slim standoff drone. Explicit rather than inferred from
+## attack_range so a future type isn't forced to look like its range.
+enum Frame { BRAWLER, LANCER }
+
 @export var display_name: String = ""
+@export var frame: Frame = Frame.BRAWLER
 @export var max_hp: float = 60.0
 @export var speed: float = 90.0
 @export var radius: float = 10.0

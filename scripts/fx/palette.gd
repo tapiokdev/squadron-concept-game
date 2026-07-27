@@ -34,6 +34,8 @@ const BOLT := Color(0.55, 0.90, 1.00)
 const PULSE := Color(0.35, 0.80, 1.00)
 const METEOR := Color(1.00, 0.55, 0.15)
 const HEAL := Color(0.40, 1.00, 0.70)
+## Player orders — the rally point. Green so it never reads as a unit.
+const COMMAND := Color(0.35, 1.00, 0.72)
 const DANGER := Color(1.00, 0.28, 0.32)
 const XP := Color(0.65, 0.95, 1.00)
 

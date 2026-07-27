@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1")
 display_name = "Archer"
+frame = 1
 max_hp = 35.0
 speed = 100.0
 radius = 9.0
@@ -12,4 +13,4 @@ attack_damage = 8.0
 attack_interval = 0.9
 attack_range = 260.0
 base_respawn = 10.0
-color = Color(0.6, 0.85, 0.35, 1)
+color = Color(0.55, 0.95, 1, 1)

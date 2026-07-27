@@ -14,6 +14,9 @@ const SLOT_RADIUS := 22.0
 ## Attack range below this counts as melee for formation purposes.
 const MELEE_RANGE_CUTOFF := 60.0
 const REFORM_INTERVAL := 0.5
+const MARKER_SPIN := 0.6
+## Respawn docks orbit clear of every ring the tower reserves.
+const DOCK_ORBIT := 42.0
 
 ## The formation only reacts to enemies this close to the rally point;
 ## farther threats (often off-screen) shouldn't make the squad shuffle.
@@ -26,6 +29,7 @@ var _enemies: EnemyPool
 var _units: Array[Summon] = []
 var _respawning: Array[Dictionary] = []
 var _reform_timer := 0.0
+var _marker_spin := 0.0
 
 func setup(enemies: EnemyPool, tower: Tower) -> void:
 	_enemies = enemies
@@ -115,17 +119,48 @@ func _process(delta: float) -> void:
 			_respawning.erase(entry)
 			var unit: Summon = entry.unit
 			unit.configure(self, unit.def, _tower.position)
+	# The marker animates and the dock arcs fill, so this node is never
+	# static for long — one node, roughly a dozen primitives.
+	_marker_spin += delta * MARKER_SPIN
+	queue_redraw()
 
 func _on_summon_died(unit: Summon) -> void:
 	# The roster slot stays taken while the unit waits to respawn.
 	_respawning.append({"unit": unit, "time_left": unit.respawn_time})
 
 func _draw() -> void:
-	# Rally marker: diamond + ground ring.
+	_draw_rally_marker()
+	_draw_respawn_docks()
+
+## Orbiting brackets around a beating diamond. Green and unlike any hull
+## in the game, so the order never reads as another unit.
+func _draw_rally_marker() -> void:
 	var p := rally_point
-	var s := 8.0
-	var points := PackedVector2Array([
+	var bracket := Palette.neon(Palette.COMMAND, 1.2)
+	for i in 4:
+		var mid := _marker_spin + TAU * float(i) / 4.0
+		draw_arc(p, 18.0, mid - 0.30, mid + 0.30, 8, bracket, 2.0)
+	draw_arc(p, 30.0, 0.0, TAU, 32, Palette.fade(Palette.COMMAND, 0.20), 1.5)
+	var beat := 0.5 + 0.5 * sin(_marker_spin * 3.0)
+	var s := 4.0 + 1.5 * beat
+	draw_colored_polygon(PackedVector2Array([
 		p + Vector2(0, -s), p + Vector2(s, 0), p + Vector2(0, s), p + Vector2(-s, 0),
-	])
-	draw_colored_polygon(points, Color(0.4, 0.9, 0.6, 0.9))
-	draw_arc(p, 30.0, 0.0, TAU, 32, Color(0.4, 0.9, 0.6, 0.35), 2.0)
+	]), Palette.hot(Palette.COMMAND, 1.4 + 0.6 * beat))
+
+## A filling arc per dead unit, docked around the mothership. Stacking a
+## type makes its respawn longer, so "when does my Bruiser come back" is
+## a real question the player has no other way to answer.
+func _draw_respawn_docks() -> void:
+	var pending := _respawning.size()
+	if pending == 0:
+		return
+	for i in pending:
+		var entry := _respawning[i]
+		var unit: Summon = entry.unit
+		var angle := TAU * float(i) / float(pending) - PI * 0.5
+		var at: Vector2 = _tower.position + Vector2.from_angle(angle) * (_tower.radius + DOCK_ORBIT)
+		var left: float = entry.time_left
+		var progress := 1.0 - clampf(left / maxf(unit.respawn_time, 0.001), 0.0, 1.0)
+		draw_arc(at, 7.0, 0.0, TAU, 16, Palette.fade(unit.def.color, 0.25), 1.5)
+		draw_arc(at, 7.0, -PI * 0.5, -PI * 0.5 + TAU * progress, 16,
+			Palette.neon(unit.def.color, 1.15), 2.0)
