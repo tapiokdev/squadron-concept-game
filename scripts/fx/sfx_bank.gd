@@ -112,9 +112,12 @@ static func _hull() -> AudioStreamWAV:
 		out[i] = sin(phase) * 0.6 * exp(-9.0 * t) + smoothed * 0.22 * exp(-24.0 * t)
 	return _pcm(out)
 
-## Distant thunder. The pause and the panel already announce the level-up,
-## so this only has to confirm it — a roll with no crack in it, heard from
-## far enough off that distance has rounded the attack and stripped the top.
+## A near tick over distant thunder. The roll on its own kept getting lost:
+## it is all bottom end under a soft attack, which is the exact shape a busy
+## mix swallows and a laptop speaker cannot reproduce. The tick is not a
+## thunder crack — it is the panel answering, a near sound over a far one.
+## It sits mid-band because everything else in the bank is low or noisy, so
+## 1.4kHz is empty air; the ear finds it without the sound getting louder.
 static func _level() -> AudioStreamWAV:
 	var count := int(RATE * 0.90)
 	var out := _buffer(count)
@@ -134,9 +137,14 @@ static func _level() -> AudioStreamWAV:
 		# Two incommensurate wobbles, so the roll never settles into a beat.
 		var roll := 0.62 + 0.26 * sin(TAU * 3.1 * time) + 0.12 * sin(TAU * 1.7 * time)
 		var env := minf(t / 0.022, 1.0) * exp(-3.2 * t)
+		# Decays in absolute seconds, not run-length, so the tick stays a tick
+		# if the roll is ever retuned longer. The 0.6ms ramp only kills the
+		# DC-step pop — any softer and it stops being an attack.
+		var tick := sin(TAU * 1400.0 * time) * exp(-42.0 * time) \
+				* minf(time / 0.0006, 1.0) * 0.16
 		# The sine is weight for headphones, not the sound — laptop speakers
 		# reproduce nothing down there, so the filtered noise has to carry it.
-		out[i] = (lp2 * 2.5 + sin(phase) * 0.22) * roll * env
+		out[i] = (lp2 * 2.5 + sin(phase) * 0.22) * roll * env + tick
 	return _pcm(out)
 
 ## Rising chirp for a unit arriving on station.

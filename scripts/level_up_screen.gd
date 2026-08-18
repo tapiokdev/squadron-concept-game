@@ -24,6 +24,13 @@ const ORBIT_PERIOD := 3.0
 const TRAIL_PX := 170.0
 const TRAIL_STEP := 8.0
 
+## The sting used to fire on the same frame as the pause, which is the
+## busiest frame of the run — the kill that earned the level is still
+## ringing. Pausing stops any new combat sound from starting, so the mix
+## clears itself in about this long; waiting buys the sting a quiet room
+## to land in, which is worth more than volume ever was.
+const STING_DELAY := 0.15
+
 var _title: Label
 var _buttons_box: VBoxContainer
 var _panel: PanelContainer
@@ -98,7 +105,14 @@ func offer(options: Array[Dictionary], title: String = "LEVEL UP — choose one"
 	set_process(true)
 	visible = true
 	get_tree().paused = true
-	Sfx.play(&"level", 1.0, -11.0)
+	# SceneTreeTimer processes while paused by default, which is the whole
+	# reason this works. The visible check covers a player who picks inside
+	# the delay — without it the sting lands in resumed combat, which is
+	# the exact thing the delay exists to avoid.
+	get_tree().create_timer(STING_DELAY).timeout.connect(
+			func() -> void:
+				if visible:
+					Sfx.play(&"level", 1.0, -9.0))
 	# Let a keyboard or gamepad player commit without reaching for the
 	# mouse; the first card is focused as soon as the box lays out.
 	if not _buttons_box.get_children().is_empty():
