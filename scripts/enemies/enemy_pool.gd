@@ -46,6 +46,16 @@ func nearest_live(pos: Vector2, max_dist: float) -> Enemy:
 			best = enemy
 	return best
 
+## How many of one type are alive right now. Lives here rather than in the
+## spawner because the pool already owns liveness — a tally kept alongside
+## it would drift the moment anything but the wave timer spawns something.
+func count_live_of(def: EnemyDef) -> int:
+	var count := 0
+	for enemy in live:
+		if enemy.def == def:
+			count += 1
+	return count
+
 func _create() -> Enemy:
 	var enemy := Enemy.new()
 	enemy.died.connect(_on_enemy_died)
