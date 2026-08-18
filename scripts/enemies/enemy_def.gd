@@ -5,7 +5,7 @@ extends Resource
 ## from one of these on spawn, so everything type-specific lives here.
 
 ## WALKER walks at the tower. SPAWNER also periodically spawns
-## `spawned_def` enemies (Broodmother); a death-spawn variant for the
+## `spawned_def` enemies (the Carrier); a death-spawn variant for the
 ## optional Popper can reuse the same fields later.
 enum Behavior { WALKER, SPAWNER }
 

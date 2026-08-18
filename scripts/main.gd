@@ -10,12 +10,12 @@ extends Node2D
 @onready var enemy_pool: EnemyPool = $EnemyPool
 @onready var projectile_pool: ProjectilePool = $ProjectilePool
 @onready var tower: Tower = $Tower
-@onready var bolt: BoltWeapon = $Tower/Bolt
+@onready var rail: RailWeapon = $Tower/Rail
 @onready var pulse: PulseWeapon = $Tower/Pulse
-@onready var meteor: MeteorSkill = $Meteor
-@onready var squad: SummonSquad = $Squad
+@onready var barrage: BarrageSkill = $Barrage
+@onready var squad: DroneSquad = $Squad
 
-const BRUISER := preload("res://data/summons/bruiser.tres")
+const BASTION := preload("res://data/drones/bastion.tres")
 @onready var spawner: EnemySpawner = $Spawner
 @onready var hud: Hud = $HUD
 @onready var level_up_screen: LevelUpScreen = $LevelUpScreen
@@ -23,7 +23,7 @@ const BRUISER := preload("res://data/summons/bruiser.tres")
 var elapsed := 0.0
 var run_over := false
 
-## XP curve tuned so a meaningful build (both summon types, stacking,
+## XP curve tuned so a meaningful build (both drone types, stacking,
 ## 1-2 weapon upgrades) is assembled by the ~min 5 elite. Tune freely.
 var xp := 0
 var level := 1
@@ -39,14 +39,14 @@ func _ready() -> void:
 	tower.died.connect(_end_run.bind(false))
 	enemy_pool.enemy_killed.connect(_on_enemy_killed)
 	spawner.setup(enemy_pool, tower)
-	bolt.setup(enemy_pool, projectile_pool, tower)
+	rail.setup(enemy_pool, projectile_pool, tower)
 	pulse.setup(enemy_pool, tower)
-	meteor.setup(enemy_pool, tower)
+	barrage.setup(enemy_pool, tower)
 	squad.setup(enemy_pool, tower)
 	enemy_pool.squad = squad
-	# Free starting summon so the rally-point mechanic is engaged
-	# immediately (brief: first offer summon-only OR free start).
-	squad.try_add_summon(BRUISER)
+	# Free starting drone so the rally-point mechanic is engaged
+	# immediately (brief: first offer drone-only OR free start).
+	squad.try_add_drone(BASTION)
 
 func _process(delta: float) -> void:
 	if run_over:

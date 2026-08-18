@@ -1,12 +1,12 @@
-class_name SummonSquad
+class_name DroneSquad
 extends Node2D
 
 ## The squad manager and the core differentiator's plumbing:
-## - RMB places the shared rally point; every summon moves toward it.
+## - RMB places the shared rally point; every drone moves toward it.
 ## - Shared unit cap (6 across all types) per the brief.
 ## - Stacking: adding another copy of a type gives it a longer respawn
 ##   (base 10s, then +60% of base per extra copy: 16s, 22s, ...).
-## Dead summons respawn at the tower after their timer and walk back.
+## Dead drones respawn at the tower after their timer and walk back.
 
 const MAX_UNITS := 6
 const RESPAWN_GROWTH := 0.6
@@ -26,7 +26,7 @@ var rally_point := Vector2.ZERO
 
 var _tower: Tower
 var _enemies: EnemyPool
-var _units: Array[Summon] = []
+var _units: Array[Drone] = []
 var _respawning: Array[Dictionary] = []
 var _reform_timer := 0.0
 var _marker_spin := 0.0
@@ -44,9 +44,9 @@ func enemy_pool() -> EnemyPool:
 	return _enemies
 
 ## Nearest active unit whose body is within `reach` of `pos` — used by
-## enemies to decide whether a summon is blocking their path.
-func blocking_unit(pos: Vector2, reach: float) -> Summon:
-	var best: Summon = null
+## enemies to decide whether a drone is blocking their path.
+func blocking_unit(pos: Vector2, reach: float) -> Drone:
+	var best: Drone = null
 	var best_gap := INF
 	for unit in _units:
 		if not unit.is_active():
@@ -57,20 +57,20 @@ func blocking_unit(pos: Vector2, reach: float) -> Summon:
 			best = unit
 	return best
 
-func count_of(def: SummonDef) -> int:
+func count_of(def: DroneDef) -> int:
 	var count := 0
 	for unit in _units:
 		if unit.def == def:
 			count += 1
 	return count
 
-func try_add_summon(def: SummonDef) -> bool:
+func try_add_drone(def: DroneDef) -> bool:
 	if total_units() >= MAX_UNITS:
 		return false
 	var copies := count_of(def)
-	var unit := Summon.new()
+	var unit := Drone.new()
 	unit.respawn_time = def.base_respawn * (1.0 + RESPAWN_GROWTH * copies)
-	unit.died.connect(_on_summon_died)
+	unit.died.connect(_on_drone_died)
 	add_child(unit)
 	unit.configure(self, def, _tower.position)
 	_units.append(unit)
@@ -79,7 +79,7 @@ func try_add_summon(def: SummonDef) -> bool:
 
 ## Threat-aware formation: melee units get the ring slots facing the
 ## nearest enemy, ranged units the back arc — so committing the squad
-## to a lane means the Bruiser tanks, not whoever's slot happened to
+## to a lane means the Bastion tanks, not whoever's slot happened to
 ## face the threat. With no enemy nearby, "front" faces away from the
 ## tower (the direction danger comes from).
 func _assign_slots() -> void:
@@ -96,7 +96,7 @@ func _assign_slots() -> void:
 	slot_order.sort_custom(func(a: int, b: int) -> bool:
 		return mini(a, n - a) < mini(b, n - b))
 	var by_role := _units.duplicate()
-	by_role.sort_custom(func(a: Summon, b: Summon) -> bool:
+	by_role.sort_custom(func(a: Drone, b: Drone) -> bool:
 		return a.def.attack_range < b.def.attack_range)
 	for k in n:
 		var angle := threat_angle + TAU * float(slot_order[k]) / n
@@ -117,14 +117,14 @@ func _process(delta: float) -> void:
 		entry.time_left -= delta
 		if entry.time_left <= 0.0:
 			_respawning.erase(entry)
-			var unit: Summon = entry.unit
+			var unit: Drone = entry.unit
 			unit.configure(self, unit.def, _tower.position)
 	# The marker animates and the dock arcs fill, so this node is never
 	# static for long — one node, roughly a dozen primitives.
 	_marker_spin += delta * MARKER_SPIN
 	queue_redraw()
 
-func _on_summon_died(unit: Summon) -> void:
+func _on_drone_died(unit: Drone) -> void:
 	# The roster slot stays taken while the unit waits to respawn.
 	_respawning.append({"unit": unit, "time_left": unit.respawn_time})
 
@@ -148,7 +148,7 @@ func _draw_rally_marker() -> void:
 	]), Palette.hot(Palette.COMMAND, 1.4 + 0.6 * beat))
 
 ## A filling arc per dead unit, docked around the mothership. Stacking a
-## type makes its respawn longer, so "when does my Bruiser come back" is
+## type makes its respawn longer, so "when does my Bastion come back" is
 ## a real question the player has no other way to answer.
 func _draw_respawn_docks() -> void:
 	var pending := _respawning.size()
@@ -156,7 +156,7 @@ func _draw_respawn_docks() -> void:
 		return
 	for i in pending:
 		var entry := _respawning[i]
-		var unit: Summon = entry.unit
+		var unit: Drone = entry.unit
 		var angle := TAU * float(i) / float(pending) - PI * 0.5
 		var at: Vector2 = _tower.position + Vector2.from_angle(angle) * (_tower.radius + DOCK_ORBIT)
 		var left: float = entry.time_left

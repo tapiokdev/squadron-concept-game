@@ -2,14 +2,14 @@ class_name Tower
 extends Node2D
 
 ## The player: a stationary mothership. No movement — all agency comes
-## from skills and summons. If it dies, the run ends.
+## from skills and drones. If it dies, the run ends.
 ##
 ## Art note: `radius` is the combat radius, and enemies stop at their own
 ## radius plus this one, so the solid hull is drawn inside it and only
 ## the shield ring — obviously energy, not plating — extends past it.
 ## Radial bands are shared with other systems and deliberately spaced so
 ## they stay separable at actual size: radius+4 is the hull integrity ring
-## below, radius+11 is the meteor recharge ring drawn by MeteorSkill, and
+## below, radius+11 is the barrage recharge ring drawn by BarrageSkill, and
 ## the rotating shield arcs sit furthest out.
 
 signal hp_changed(hp: float, max_hp: float)
@@ -62,7 +62,7 @@ func heal(amount: float) -> void:
 	hp = minf(hp + amount, max_hp)
 	FxLayer.ring(global_position, Palette.HEAL, radius * 0.4, radius * 2.6, 0.5, 3.0)
 	FxLayer.burst(global_position, Palette.HEAL, 14, 130.0, 0.7)
-	Sfx.play(&"summon", 0.8, -8.0)
+	Sfx.play(&"deploy", 0.8, -8.0)
 	hp_changed.emit(hp, max_hp)
 
 func take_damage(amount: float) -> void:
@@ -87,7 +87,7 @@ func _explode() -> void:
 	FxLayer.burst(global_position, Palette.TOWER, 44, 430.0, 1.1)
 	GameCamera.shake(1.0)
 	# The strike sample pitched right down doubles as the hull going up.
-	Sfx.play(&"meteor", 0.55, -1.0)
+	Sfx.play(&"barrage", 0.55, -1.0)
 
 func _draw() -> void:
 	if not alive:

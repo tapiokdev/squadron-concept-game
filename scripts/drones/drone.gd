@@ -1,11 +1,11 @@
-class_name Summon
+class_name Drone
 extends Node2D
 
-## One summon unit. Lightweight Node2D — summons and enemies find each
+## One drone unit. Lightweight Node2D — drones and enemies find each
 ## other through list queries, no physics. Movement is squad-driven:
 ## walk toward the squad's rally point (plus a per-unit slot offset so
 ## the squad forms a loose ring instead of a stack). No chasing — a
-## summon fights what comes into its own reach; rally placement is the
+## a drone fights what comes into its own reach; rally placement is the
 ## player's lever.
 ##
 ## Art follows the enemies' rules so friend and foe read the same way:
@@ -13,7 +13,7 @@ extends Node2D
 ## redraw, hit flash by `modulate`. Condition shows in the hull tint,
 ## which is rotation-proof — an HP arc would spin with the ship.
 
-signal died(summon: Summon)
+signal died(drone: Drone)
 
 const STOP_DISTANCE := 3.0
 const SHOT_FLASH_TIME := 0.12
@@ -22,12 +22,12 @@ const FLASH_FADE := 10.0
 ## Below this attack range a shot is a melee swipe, not a tracer.
 const MELEE_SHOT_RANGE := 60.0
 
-var def: SummonDef
+var def: DroneDef
 var hp: float = 0.0
 var slot_offset := Vector2.ZERO
 var respawn_time: float = 10.0
 
-var _squad: SummonSquad
+var _squad: DroneSquad
 var _active := false
 var _attack_cooldown: float = 0.0
 var _shot_target := Vector2.ZERO
@@ -39,7 +39,7 @@ var _heading := 0.0
 func _ready() -> void:
 	set_process(_active)
 
-func configure(squad: SummonSquad, new_def: SummonDef, spawn_pos: Vector2) -> void:
+func configure(squad: DroneSquad, new_def: DroneDef, spawn_pos: Vector2) -> void:
 	_squad = squad
 	def = new_def
 	hp = def.max_hp
@@ -50,15 +50,15 @@ func configure(squad: SummonSquad, new_def: SummonDef, spawn_pos: Vector2) -> vo
 	modulate = Color.WHITE
 	_build_hull()
 	set_process(true)
-	# Warp-in, matching how the brood arrives — a unit that simply blinks
+	# Warp-in, matching how a carrier's swarm arrives — a unit that simply blinks
 	# into existence at the tower reads as a glitch.
 	FxLayer.ring(spawn_pos, def.color, def.radius * 3.0, def.radius * 0.6, 0.3, 2.0)
-	Sfx.play(&"summon", 1.0, -11.0)
+	Sfx.play(&"deploy", 1.0, -11.0)
 	queue_redraw()
 
 func _build_hull() -> void:
 	var r := def.radius
-	if def.frame == SummonDef.Frame.LANCER:
+	if def.frame == DroneDef.Frame.LANCER:
 		# Slim four-point kite: light, pointy, obviously standoff.
 		_hull = Shapes.star(r * 1.5, r * 0.5, 4)
 	else:

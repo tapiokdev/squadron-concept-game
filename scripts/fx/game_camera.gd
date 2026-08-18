@@ -5,7 +5,7 @@ extends Camera2D
 ## parks on the centre of the play area for the whole run.
 ##
 ## Trauma decays linearly but displacement scales with its square, so a
-## swarmer chipping the hull barely registers while a meteor really
+## swarmer chipping the hull barely registers while a barrage really
 ## lands. Offsets come from noise rather than `randf()` so the shake
 ## reads as motion instead of per-frame buzz.
 
@@ -21,7 +21,7 @@ var _trauma := 0.0
 var _time := 0.0
 var _noise := FastNoiseLite.new()
 
-## Adds trauma; 0.2 is a hull hit, 0.6 is a meteor. Saturates at 1.0, so
+## Adds trauma; 0.2 is a hull hit, 0.6 is a barrage. Saturates at 1.0, so
 ## a swarm landing at once shakes hard but never turns into a blender.
 static func shake(amount: float) -> void:
 	if instance != null:

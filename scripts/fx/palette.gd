@@ -30,9 +30,9 @@ const ALLY := Color(0.25, 0.90, 1.00)
 const HOSTILE := Color(1.00, 0.25, 0.50)
 
 # --- Systems -------------------------------------------------------------
-const BOLT := Color(0.55, 0.90, 1.00)
+const RAIL := Color(0.55, 0.90, 1.00)
 const PULSE := Color(0.35, 0.80, 1.00)
-const METEOR := Color(1.00, 0.55, 0.15)
+const BARRAGE := Color(1.00, 0.55, 0.15)
 const HEAL := Color(0.40, 1.00, 0.70)
 ## Player orders — the rally point. Green so it never reads as a unit.
 const COMMAND := Color(0.35, 1.00, 0.72)
@@ -54,8 +54,8 @@ static func hot(color: Color, gain: float = 2.0) -> Color:
 ##
 ## A flat multiply clips channels one at a time and shifts the hue on the
 ## way: amber (1.0, 0.62, 0.12) at gain 1.8 clips red first and arrives as
-## yellow, which costs the player the ability to tell a rusher from a
-## broodmother at a glance. Scaling to a known peak keeps the ratios, so
+## yellow, which costs the player the ability to tell an interceptor from a
+## carrier at a glance. Scaling to a known peak keeps the ratios, so
 ## a gain just over 1.0 still blooms while staying the right colour. Use
 ## this for anything whose colour carries meaning.
 static func neon(color: Color, gain: float = 1.2) -> Color:

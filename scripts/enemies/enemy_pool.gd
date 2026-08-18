@@ -5,7 +5,7 @@ extends Node2D
 ## an EnemyDef on spawn — any type, same pool.
 ##
 ## max_live is the global live-count guard from the project brief: every
-## spawn path (wave timer, Broodmother, death-spawns) must go through
+## spawn path (wave timer, Carrier, death-spawns) must go through
 ## try_spawn(), which refuses once the cap is reached. Callers must handle
 ## a null return by skipping the spawn.
 
@@ -15,8 +15,8 @@ extends Node2D
 ## Emitted on every enemy death with its XP reward; main tallies levels.
 signal enemy_killed(xp: int)
 
-## Set by main; lets enemies see summons that block their path.
-var squad: SummonSquad
+## Set by main; lets enemies see drones that block their path.
+var squad: DroneSquad
 
 var live_count: int = 0
 var live: Array[Enemy] = []

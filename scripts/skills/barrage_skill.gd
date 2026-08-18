@@ -1,9 +1,9 @@
-class_name MeteorSkill
+class_name BarrageSkill
 extends Node2D
 
 ## LMB active skill: cursor-aimed AoE strike on a long cooldown, the core
 ## moment-to-moment decision. Tuning intent from the brief: one cast
-## clears a single swarmer cluster OR dents one brute/elite.
+## clears a single swarmer cluster OR dents one bulwark/elite.
 ##
 ## Presented as an orbital strike — a reticle locks onto the marked
 ## ground while the round falls in from off-screen. The telegraph is not
@@ -86,13 +86,13 @@ func _impact() -> void:
 	for enemy in _enemies.live.duplicate():
 		if _pending_pos.distance_to(enemy.global_position) <= _impact_radius + enemy.def.radius:
 			enemy.take_damage(damage * mult)
-	FxLayer.flash(_pending_pos, Palette.METEOR, _impact_radius * 0.7, 0.18 + 0.2 * mult)
-	FxLayer.ring(_pending_pos, Palette.METEOR, _impact_radius * 0.25, _impact_radius * 1.3, 0.4, 5.0)
-	FxLayer.burst(_pending_pos, Palette.METEOR, roundi(24.0 * mult) + 8,
+	FxLayer.flash(_pending_pos, Palette.BARRAGE, _impact_radius * 0.7, 0.18 + 0.2 * mult)
+	FxLayer.ring(_pending_pos, Palette.BARRAGE, _impact_radius * 0.25, _impact_radius * 1.3, 0.4, 5.0)
+	FxLayer.burst(_pending_pos, Palette.BARRAGE, roundi(24.0 * mult) + 8,
 		_impact_radius * 4.0, 0.6)
 	GameCamera.shake(0.12 + 0.62 * mult)
 	# The echo is the same strike, further away and smaller.
-	Sfx.play(&"meteor", 1.0 if mult >= 1.0 else 1.35, -4.0 if mult >= 1.0 else -11.0)
+	Sfx.play(&"barrage", 1.0 if mult >= 1.0 else 1.35, -4.0 if mult >= 1.0 else -11.0)
 	if aftershock and not _aftershock_next:
 		_aftershock_next = true
 		_incoming = false
@@ -109,8 +109,8 @@ func _draw_telegraph() -> void:
 	var progress := 1.0 - clampf(_impact_in / maxf(_impact_total, 0.0001), 0.0, 1.0)
 	# The marked disc is drawn at the true blast radius — this is the
 	# player's only chance to judge the aim.
-	draw_circle(_pending_pos, _impact_radius, Palette.fade(Palette.METEOR, 0.07))
-	draw_arc(_pending_pos, _impact_radius, 0.0, TAU, 48, Palette.neon(Palette.METEOR, 1.25), 2.0)
+	draw_circle(_pending_pos, _impact_radius, Palette.fade(Palette.BARRAGE, 0.07))
+	draw_arc(_pending_pos, _impact_radius, 0.0, TAU, 48, Palette.neon(Palette.BARRAGE, 1.25), 2.0)
 	# Brackets close in and rotate as the round comes down, which reads as
 	# a lock tightening rather than a static circle.
 	var lock := _impact_radius * (1.55 - 0.5 * progress)
@@ -118,15 +118,15 @@ func _draw_telegraph() -> void:
 	for i in RETICLE_ARCS:
 		var mid := spin + TAU * float(i) / float(RETICLE_ARCS)
 		draw_arc(_pending_pos, lock, mid - 0.22, mid + 0.22, 8,
-			Palette.hot(Palette.METEOR, 1.5), 2.5)
+			Palette.hot(Palette.BARRAGE, 1.5), 2.5)
 	if _incoming:
 		_draw_incoming(progress)
 
 func _draw_incoming(progress: float) -> void:
 	var head := _pending_pos - _entry * (ENTRY_DISTANCE * (1.0 - progress))
-	draw_line(head - _entry * STREAK_TAIL, head, Palette.fade(Palette.METEOR, 0.30), 2.0)
-	draw_line(head - _entry * (STREAK_TAIL * 0.3), head, Palette.hot(Palette.METEOR, 1.8), 4.0)
-	draw_circle(head, 6.0, Palette.hot(Palette.METEOR, 2.6))
+	draw_line(head - _entry * STREAK_TAIL, head, Palette.fade(Palette.BARRAGE, 0.30), 2.0)
+	draw_line(head - _entry * (STREAK_TAIL * 0.3), head, Palette.hot(Palette.BARRAGE, 1.8), 4.0)
+	draw_circle(head, 6.0, Palette.hot(Palette.BARRAGE, 2.6))
 
 ## The brief requires an always-visible cooldown indicator: a recharge
 ## ring around the tower that fills clockwise and breathes once charged.
@@ -140,10 +140,10 @@ func _draw_recharge_ring() -> void:
 	if is_ready():
 		var beat := 0.5 + 0.5 * sin(_ready_pulse)
 		draw_arc(_tower.position, ring_radius, 0.0, TAU, 40,
-			Palette.neon(Palette.METEOR, 1.1 + 0.35 * beat), 2.5)
+			Palette.neon(Palette.BARRAGE, 1.1 + 0.35 * beat), 2.5)
 		return
-	draw_arc(_tower.position, ring_radius, 0.0, TAU, 40, Palette.fade(Palette.METEOR, 0.15), 2.5)
+	draw_arc(_tower.position, ring_radius, 0.0, TAU, 40, Palette.fade(Palette.BARRAGE, 0.15), 2.5)
 	var fraction := cooldown_fraction()
 	if fraction > 0.0:
 		draw_arc(_tower.position, ring_radius, -PI / 2.0, -PI / 2.0 + TAU * fraction, 40,
-			Palette.fade(Palette.neon(Palette.METEOR, 1.0), 0.75), 2.5)
+			Palette.fade(Palette.neon(Palette.BARRAGE, 1.0), 0.75), 2.5)

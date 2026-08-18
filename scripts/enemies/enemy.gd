@@ -71,7 +71,7 @@ func configure(pool: EnemyPool, new_def: EnemyDef, spawn_pos: Vector2, new_targe
 	set_process(true)
 	set_deferred("monitorable", true)
 	# Edge spawns arrive off-screen, so only pay for the warp-in where it
-	# will be seen — which is exactly the broodmother's brood.
+	# will be seen — which is exactly a carrier's swarm.
 	if get_viewport_rect().has_point(spawn_pos):
 		FxLayer.ring(spawn_pos, def.color, def.radius * 2.6, def.radius * 0.6, 0.28, 2.0)
 	queue_redraw()
@@ -132,8 +132,8 @@ func _process(delta: float) -> void:
 			target.take_damage(def.contact_damage)
 			_attack_cooldown = def.attack_interval
 	else:
-		# A summon standing in the way gets fought instead of walked through.
-		var blocker: Summon = null
+		# A drone standing in the way gets fought instead of walked through.
+		var blocker: Drone = null
 		if _pool.squad != null:
 			blocker = _pool.squad.blocking_unit(global_position, def.radius + 4.0)
 		if blocker != null:
@@ -172,7 +172,7 @@ func die() -> void:
 	if not _active:
 		return
 	deactivate()
-	# Debris scaled by body size, so a brute comes apart harder than a
+	# Debris scaled by body size, so a bulwark comes apart harder than a
 	# swarmer and a wiped-out swarm still reads as one big event.
 	var shards := clampi(roundi(def.radius * 0.8), 5, 18)
 	FxLayer.burst(global_position, def.color, shards, def.radius * 9.0, 0.42)

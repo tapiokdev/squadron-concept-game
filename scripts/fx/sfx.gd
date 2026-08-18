@@ -16,7 +16,7 @@ const VOICES := 12
 const MIN_GAP := {
 	&"kill": 0.045,
 	&"hull": 0.06,
-	&"bolt": 0.05,
+	&"rail": 0.05,
 }
 
 static var instance: Sfx

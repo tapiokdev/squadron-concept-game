@@ -1,10 +1,10 @@
-[gd_resource type="Resource" script_class="SummonDef" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="DroneDef" load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/summons/summon_def.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/drones/drone_def.gd" id="1"]
 
 [resource]
 script = ExtResource("1")
-display_name = "Archer"
+display_name = "Lancer"
 frame = 1
 max_hp = 35.0
 speed = 100.0

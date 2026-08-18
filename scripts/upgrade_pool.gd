@@ -7,8 +7,8 @@ extends RefCounted
 ## other — and the power envelope per level stays predictable for wave
 ## tuning. POC content only: no raw stat passives.
 
-const BRUISER := preload("res://data/summons/bruiser.tres")
-const ARCHER := preload("res://data/summons/archer.tres")
+const BASTION := preload("res://data/drones/bastion.tres")
+const LANCER := preload("res://data/drones/lancer.tres")
 
 ## Returns {"track": actually-used track, "options": up to `count` picks}.
 ## options is empty only when both tracks are exhausted.
@@ -26,18 +26,18 @@ static func roll(main: Node, track: String, count: int = 3) -> Dictionary:
 
 static func _squad_options(main: Node) -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
-	if main.squad.total_units() < SummonSquad.MAX_UNITS:
+	if main.squad.total_units() < DroneSquad.MAX_UNITS:
 		options.append({
-			"id": "add_bruiser",
-			"title": "Summon Bruiser",
-			"desc": "Melee tank joins the squad (respawn grows per copy)",
-			"apply": func() -> void: main.squad.try_add_summon(BRUISER),
+			"id": "add_bastion",
+			"title": "Deploy Bastion",
+			"desc": "Heavy drone holds the line (redeploy grows per copy)",
+			"apply": func() -> void: main.squad.try_add_drone(BASTION),
 		})
 		options.append({
-			"id": "add_archer",
-			"title": "Summon Archer",
-			"desc": "Long-range shooter joins the squad (respawn grows per copy)",
-			"apply": func() -> void: main.squad.try_add_summon(ARCHER),
+			"id": "add_lancer",
+			"title": "Deploy Lancer",
+			"desc": "Standoff drone, fires at range (redeploy grows per copy)",
+			"apply": func() -> void: main.squad.try_add_drone(LANCER),
 		})
 	return options
 
@@ -60,26 +60,26 @@ static func _tower_options(main: Node) -> Array[Dictionary]:
 				main.pulse.radius *= 1.25
 				main.pulse.cooldown *= 0.8,
 		})
-	if main.bolt.spread_count == 1:
+	if main.rail.spread_count == 1:
 		options.append({
-			"id": "bolt_spread",
-			"title": "Bolt: triple spread",
-			"desc": "Bolt fires a spread of 3 projectiles",
-			"apply": func() -> void: main.bolt.spread_count = 3,
+			"id": "rail_spread",
+			"title": "Rail: triple spread",
+			"desc": "Rail fires a spread of 3 shots",
+			"apply": func() -> void: main.rail.spread_count = 3,
 		})
-	if main.bolt.pierce == 0:
+	if main.rail.pierce == 0:
 		options.append({
-			"id": "bolt_pierce",
-			"title": "Bolt: piercing shots",
-			"desc": "Bolts pass through one extra enemy",
-			"apply": func() -> void: main.bolt.pierce = 1,
+			"id": "rail_pierce",
+			"title": "Rail: piercing shots",
+			"desc": "Rail shots pass through one extra hostile",
+			"apply": func() -> void: main.rail.pierce = 1,
 		})
-	if not main.meteor.aftershock:
+	if not main.barrage.aftershock:
 		options.append({
-			"id": "meteor_aftershock",
-			"title": "Meteor: aftershock",
+			"id": "barrage_aftershock",
+			"title": "Barrage: aftershock",
 			"desc": "Impacts echo once for 50% damage",
-			"apply": func() -> void: main.meteor.aftershock = true,
+			"apply": func() -> void: main.barrage.aftershock = true,
 		})
 	# Repeatable fallback so late level-ups stay meaningful after the
 	# real upgrades run out; only offered when actually damaged.

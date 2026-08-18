@@ -1,7 +1,7 @@
-class_name BoltWeapon
+class_name RailWeapon
 extends Node
 
-## Bolt: the starting auto-attack. Fires a projectile at the nearest live
+## Rail: the starting auto-attack. Fires a projectile at the nearest live
 ## enemy on a fixed cooldown, no player input. The behaviour upgrade from
 ## the brief ("spread of 3") is just spread_count = 3 later.
 
@@ -11,7 +11,7 @@ extends Node
 @export var attack_range := 420.0
 @export var spread_count := 1
 @export var spread_step_deg := 12.0
-## Extra enemies each bolt can pass through (behaviour upgrade).
+## Extra enemies each shot can pass through (behaviour upgrade).
 @export var pierce := 0
 
 var _enemies: EnemyPool
@@ -36,14 +36,14 @@ func _process(delta: float) -> void:
 	_cd = cooldown
 	var base_dir := (target.global_position - _tower.position).normalized()
 	# Muzzle flash on the hull edge, so the mothership visibly does the
-	# shooting instead of bolts appearing out of its middle.
+	# shooting instead of shots appearing out of its middle.
 	var muzzle := _tower.position + base_dir * _tower.radius
-	FxLayer.flash(muzzle, Palette.BOLT, 11.0, 0.1)
-	FxLayer.burst(muzzle, Palette.BOLT, 3, 110.0, 0.16, base_dir.angle(), 0.9)
+	FxLayer.flash(muzzle, Palette.RAIL, 11.0, 0.1)
+	FxLayer.burst(muzzle, Palette.RAIL, 3, 110.0, 0.16, base_dir.angle(), 0.9)
 	# Quietest thing in the mix by a wide margin: it repeats all run, so it
 	# is meant to sit under everything rather than be listened to. The pitch
 	# jitter is what keeps it from reading as a machine gun.
-	Sfx.play(&"bolt", randf_range(0.94, 1.1), -19.0)
+	Sfx.play(&"rail", randf_range(0.94, 1.1), -19.0)
 	for i in spread_count:
 		var offset := deg_to_rad(spread_step_deg) * (float(i) - (spread_count - 1) * 0.5)
 		_projectiles.try_spawn(

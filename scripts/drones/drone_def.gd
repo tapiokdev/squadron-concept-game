@@ -1,9 +1,9 @@
-class_name SummonDef
+class_name DroneDef
 extends Resource
 
-## Data definition for one summon type, mirroring EnemyDef. Picking the
+## Data definition for one drone type, mirroring EnemyDef. Picking the
 ## same type again in the upgrade screen adds another unit (stacking);
-## respawn time grows per extra copy — see SummonSquad.
+## respawn time grows per extra copy — see DroneSquad.
 
 ## Hull frame. BRAWLER is the broad shielded drone that holds a line;
 ## LANCER is the slim standoff drone. Explicit rather than inferred from

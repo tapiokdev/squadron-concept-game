@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-display_name = "Brute"
+display_name = "Bulwark"
 behavior = 0
 max_hp = 120.0
 speed = 35.0

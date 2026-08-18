@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-display_name = "Rusher"
+display_name = "Interceptor"
 behavior = 0
 max_hp = 12.0
 speed = 140.0

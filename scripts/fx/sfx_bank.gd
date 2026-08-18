@@ -22,20 +22,20 @@ const NOISE_SMOOTH := 0.35
 
 static func build_all() -> Dictionary:
 	return {
-		&"bolt": _bolt(),
+		&"rail": _rail(),
 		&"pulse": _pulse(),
-		&"meteor": _meteor(),
+		&"barrage": _barrage(),
 		&"kill": _kill(),
 		&"hull": _hull(),
 		&"level": _level(),
-		&"summon": _summon(),
+		&"deploy": _deploy(),
 	}
 
 ## A soft thunk, not a zap. This fires every 0.7s from the first second of
 ## a run to the last — several hundred times — so it carries no square edge
-## and almost no top end. The bolt you can see is the real feedback; this
+## and almost no top end. The rail shot you can see is the real feedback; this
 ## only has to say the tower is still working.
-static func _bolt() -> AudioStreamWAV:
+static func _rail() -> AudioStreamWAV:
 	var count := int(RATE * 0.07)
 	var out := _buffer(count)
 	var rng := _rng(7)
@@ -70,7 +70,7 @@ static func _pulse() -> AudioStreamWAV:
 	return _pcm(out)
 
 ## Orbital strike: a sharp crack over a long low boom.
-static func _meteor() -> AudioStreamWAV:
+static func _barrage() -> AudioStreamWAV:
 	var count := int(RATE * 0.75)
 	var out := _buffer(count)
 	var rng := _rng()
@@ -84,7 +84,7 @@ static func _meteor() -> AudioStreamWAV:
 	return _pcm(out)
 
 ## Short bright pop. Callers pitch it by hull size, so one sample covers
-## a swarmer and a broodmother.
+## a swarmer and a carrier.
 static func _kill() -> AudioStreamWAV:
 	var count := int(RATE * 0.12)
 	var out := _buffer(count)
@@ -148,7 +148,7 @@ static func _level() -> AudioStreamWAV:
 	return _pcm(out)
 
 ## Rising chirp for a unit arriving on station.
-static func _summon() -> AudioStreamWAV:
+static func _deploy() -> AudioStreamWAV:
 	var count := int(RATE * 0.22)
 	var out := _buffer(count)
 	var phase := 0.0
@@ -165,7 +165,7 @@ static func _buffer(count: int) -> PackedFloat32Array:
 
 ## `offset` gives a generator its own noise sequence. Sounds that share a
 ## seed also share their noise, which is fine for short pops but not for
-## the two long ones: thunder and a meteor overlapping would otherwise read
+## the two long ones: thunder and a barrage overlapping would otherwise read
 ## as a single doubled sound rather than two events.
 static func _rng(offset: int = 0) -> RandomNumberGenerator:
 	var rng := RandomNumberGenerator.new()

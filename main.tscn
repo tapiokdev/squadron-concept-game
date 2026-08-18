@@ -5,12 +5,12 @@
 [ext_resource type="Script" uid="uid://cvs48mwoll5xo" path="res://scripts/enemies/enemy_pool.gd" id="2_h2yge"]
 [ext_resource type="Script" uid="uid://coxiqvlqbfpsk" path="res://scripts/tower.gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://blq07ni462w1i" path="res://scripts/enemy_spawner.gd" id="4_1bvp3"]
-[ext_resource type="Script" uid="uid://cwbgoem4kwgva" path="res://scripts/weapons/bolt_weapon.gd" id="4_7mycd"]
+[ext_resource type="Script" uid="uid://cwbgoem4kwgva" path="res://scripts/weapons/rail_weapon.gd" id="4_7mycd"]
 [ext_resource type="Script" uid="uid://bmwon7t7kxr5o" path="res://scripts/weapons/pulse_weapon.gd" id="5_272bh"]
 [ext_resource type="Script" uid="uid://cl5gi1cvtvj0w" path="res://scripts/projectile_pool.gd" id="6_272bh"]
-[ext_resource type="Script" uid="uid://cudwacynjo7e2" path="res://scripts/skills/meteor_skill.gd" id="8_5vw27"]
+[ext_resource type="Script" uid="uid://cudwacynjo7e2" path="res://scripts/skills/barrage_skill.gd" id="8_5vw27"]
 [ext_resource type="Script" uid="uid://dv5kecqi1jxd2" path="res://scripts/hud.gd" id="8_vivmo"]
-[ext_resource type="Script" uid="uid://cspf6mhpa34gy" path="res://scripts/summons/summon_squad.gd" id="9_kek77"]
+[ext_resource type="Script" uid="uid://cspf6mhpa34gy" path="res://scripts/drones/drone_squad.gd" id="9_kek77"]
 [ext_resource type="Script" uid="uid://cq0dswfdd6141" path="res://scripts/level_up_screen.gd" id="10_4c57u"]
 [ext_resource type="Environment" path="res://data/fx/neon_env.tres" id="12_ycdy4"]
 [ext_resource type="Script" uid="uid://qhrd1qio6xrm" path="res://scripts/fx/fx_layer.gd" id="13_w48qg"]
@@ -29,7 +29,7 @@ script = ExtResource("2_h2yge")
 [node name="Tower" type="Node2D" parent="." unique_id=200928788]
 script = ExtResource("3_h2yge")
 
-[node name="Bolt" type="Node" parent="Tower" unique_id=627310433]
+[node name="Rail" type="Node" parent="Tower" unique_id=627310433]
 script = ExtResource("4_7mycd")
 
 [node name="Pulse" type="Node2D" parent="Tower" unique_id=890630046]
@@ -44,7 +44,7 @@ script = ExtResource("8_vivmo")
 [node name="ProjectilePool" type="Node2D" parent="." unique_id=1662471472]
 script = ExtResource("6_272bh")
 
-[node name="Meteor" type="Node2D" parent="." unique_id=458302395]
+[node name="Barrage" type="Node2D" parent="." unique_id=458302395]
 script = ExtResource("8_5vw27")
 
 [node name="Squad" type="Node2D" parent="." unique_id=1112276786]

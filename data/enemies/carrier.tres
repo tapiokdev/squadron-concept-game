@@ -5,7 +5,7 @@
 
 [resource]
 script = ExtResource("1")
-display_name = "Broodmother"
+display_name = "Carrier"
 behavior = 1
 max_hp = 600.0
 speed = 25.0
