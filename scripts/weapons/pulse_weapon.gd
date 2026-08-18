@@ -11,6 +11,8 @@ extends Node2D
 @export var radius := 150.0
 
 const FLASH_TIME := 0.25
+## Enemies caught in one burst for it to play at full level.
+const FULL_VOICE_HITS := 6
 
 var _enemies: EnemyPool
 var _tower: Tower
@@ -30,13 +32,13 @@ func _process(delta: float) -> void:
 	_cd = maxf(_cd - delta, 0.0)
 	if _cd > 0.0:
 		return
-	var hit_any := false
+	var hits := 0
 	# Iterate a copy: take_damage can kill and mutate the live list.
 	for enemy in _enemies.live.duplicate():
 		if _tower.position.distance_to(enemy.global_position) <= radius + enemy.def.radius:
 			enemy.take_damage(damage)
-			hit_any = true
-	if hit_any:
+			hits += 1
+	if hits > 0:
 		_cd = cooldown
 		_flash = FLASH_TIME
 		# The wave travelling outward is what sells this as a discharge;
@@ -44,7 +46,14 @@ func _process(delta: float) -> void:
 		FxLayer.ring(_tower.position, Palette.PULSE, radius * 0.2, radius, FLASH_TIME, 4.0)
 		FxLayer.flash(_tower.position, Palette.PULSE, radius * 0.35, 0.16)
 		GameCamera.shake(0.14)
-		Sfx.play(&"pulse", 1.0, -9.0)
+		# Late in a run this fires every 1.4s, so the two things that made it
+		# fatiguing were uniformity and repetition rather than level. Pitch
+		# jitter is what the Rail already uses to stop reading as a machine;
+		# scaling by hit count means clipping one straggler is a murmur and
+		# only wiping a cluster is the full sound, which also drops the
+		# average because most bursts are small.
+		var weight := clampf(float(hits) / float(FULL_VOICE_HITS), 0.0, 1.0)
+		Sfx.play(&"pulse", randf_range(0.94, 1.08), lerpf(-16.0, -9.0, weight))
 		queue_redraw()
 
 ## The expanding wave is an FX-layer ring; this is just the residual wash

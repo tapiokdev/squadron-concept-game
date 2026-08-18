@@ -66,15 +66,22 @@ static func _rail() -> AudioStreamWAV:
 				+ smoothed * 0.07 * exp(-60.0 * t)) * minf(t / 0.0015, 1.0)
 	return _pcm(out)
 
-## Capacitor dump: a low sweep with an audible swell rather than a click,
-## so it reads as a discharge building and releasing. The swell is the right
-## gesture and is kept.
+## Capacitor dump: a wave leaving, not arriving. It used to open with a 90ms
+## swell, which was the wrong gesture for something that fires every 1.4s
+## once the cooldown is fully upgraded — rising energy is what the ear reads
+## as an approach, so a sound that grows asks for attention every time it
+## repeats, however quiet it is. This peaks at once and falls away instead.
 ##
-## It used to bottom out at 68Hz, which is below what a laptop speaker
-## reproduces at all — so on the hardware this actually ships to, the AoE
-## burst was very nearly silent. Raised to sit where it can be heard.
+## The partial and the noise decay faster than the fundamental, so the burst
+## loses its top as it goes. That is what recession actually sounds like,
+## and it keeps the metallic edge on the attack while taking it out of the
+## long tail that ends up sitting under the rest of the mix.
+##
+## The band stays where the previous pass put it: it used to bottom out at
+## 68Hz, which a laptop speaker does not reproduce at all, so on the
+## hardware this ships to the burst was very nearly silent.
 static func _pulse() -> AudioStreamWAV:
-	var count := int(RATE * 0.45)
+	var count := int(RATE * 0.40)
 	var out := _buffer(count)
 	var rng := _rng()
 	var phase := 0.0
@@ -89,8 +96,11 @@ static func _pulse() -> AudioStreamWAV:
 		# beats against it and reads as metal.
 		ring_phase += TAU * freq * 2.4 / RATE
 		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), NOISE_SMOOTH)
-		var env := minf(t / 0.09, 1.0) * exp(-3.4 * t)
-		out[i] = (sin(phase) * 0.5 + sin(ring_phase) * 0.16 + smoothed * 0.12) * env
+		# 1.5ms of ramp, only enough to kill the DC-step pop.
+		var env := minf(t / 0.0015, 1.0) * exp(-3.4 * t)
+		out[i] = (sin(phase) * 0.5
+				+ sin(ring_phase) * 0.16 * exp(-6.0 * t)
+				+ smoothed * 0.12 * exp(-4.0 * t)) * env
 	return _pcm(out)
 
 ## Orbital strike: a sharp crack over a long low boom.
