@@ -26,9 +26,11 @@ var _hp_text: Label
 var _level: Label
 var _threat: Label
 var _banner: Label
+var _hint: Label
 
 var _health := 1.0
 var _progress := 0.0
+var _hint_phase := 0.0
 
 func _ready() -> void:
 	layer = 5
@@ -54,6 +56,15 @@ func _ready() -> void:
 	_threat = _add_label(12, Color(0.72, 0.55, 0.68))
 	_threat.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_anchor_right(_threat, 40.0)
+
+	# Control prompts live at the bottom edge, out of the play space and
+	# where prompts are conventionally looked for.
+	_hint = _add_label(15, Color(0.62, 0.86, 1.0))
+	_hint.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	_hint.offset_bottom = -54.0
+	_hint.visible = false
 
 	_banner = _add_label(34, Color(0.92, 0.97, 1.0))
 	_banner.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -89,7 +100,25 @@ func update_run(remaining: float, hp: float, max_hp: float,
 	_threat.text = "%d hostile" % threat if threat == 1 else "%d hostiles" % threat
 	_health = clampf(hp / max_hp, 0.0, 1.0) if max_hp > 0.0 else 0.0
 	_progress = clampf(float(xp) / float(maxi(xp_needed, 1)), 0.0, 1.0)
+	# A hint that simply sits there is easy to look past, and this one has to
+	# be noticed by someone who does not yet know the control exists. Ridden
+	# off this call rather than a _process of its own, since main already
+	# drives the HUD every frame.
+	if _hint.visible:
+		_hint_phase += 0.045
+		_hint.modulate.a = 0.62 + 0.38 * (0.5 + 0.5 * sin(_hint_phase))
 	_root.queue_redraw()
+
+## Control prompt. Called every frame while a hint is wanted, so it
+## early-outs on an unchanged string rather than re-laying out the label.
+func show_hint(text: String) -> void:
+	if _hint.visible and _hint.text == text:
+		return
+	_hint.text = text
+	_hint.visible = true
+
+func hide_hint() -> void:
+	_hint.visible = false
 
 func show_result(text: String) -> void:
 	_banner.text = text

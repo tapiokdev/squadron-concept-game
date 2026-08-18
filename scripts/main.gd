@@ -6,6 +6,10 @@ extends Node2D
 
 ## Tunable per the brief — 8 min starting point, revisit after playtests.
 @export var run_duration := 480.0
+## Grace before the first control prompt. Long enough that a player who
+## already knows the game never sees it, short enough that one who does not
+## is not left watching the tower take hits.
+const HINT_DELAY := 4.0
 
 @onready var enemy_pool: EnemyPool = $EnemyPool
 @onready var projectile_pool: ProjectilePool = $ProjectilePool
@@ -36,6 +40,7 @@ var rail_power := 0
 var pulse_power := 0
 var barrage_power := 0
 var _picks_offered := 0
+var _hints_done := false
 
 func xp_to_next() -> int:
 	return 15 + (level - 1) * 12
@@ -72,8 +77,31 @@ func _process(delta: float) -> void:
 	if elapsed >= run_duration:
 		_end_run(true)
 		return
+	_update_hints()
 	hud.update_run(run_duration - elapsed, tower.hp, tower.max_hp,
 		level, xp, xp_to_next(), enemy_pool.live_count)
+
+## Opening chain: the squad now starts below the mothership with the first
+## lane above it, so a rally order is the run's first real question — but
+## nothing on screen says which button gives one. Each prompt appears only
+## for a player who has not already done the thing, and the pair never
+## returns once both are done, so a second run is never nagged.
+##
+## Rally comes first because it is the brief's differentiator; the barrage
+## follows once the squad is placed, rather than competing for the same
+## glance.
+func _update_hints() -> void:
+	if _hints_done:
+		return
+	if not squad.has_rallied:
+		if elapsed >= HINT_DELAY:
+			hud.show_hint("RIGHT-CLICK TO RALLY YOUR DRONES")
+		return
+	if not barrage.has_cast:
+		hud.show_hint("LEFT-CLICK TO CALL A BARRAGE")
+		return
+	_hints_done = true
+	hud.hide_hint()
 
 func _on_enemy_killed(amount: int) -> void:
 	if run_over:

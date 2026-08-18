@@ -23,6 +23,9 @@ const DOCK_ORBIT := 42.0
 @export var threat_scan_radius := 200.0
 
 var rally_point := Vector2.ZERO
+## Whether the player has ever given a rally order. Drives the opening
+## hint, which has no business appearing for someone already doing it.
+var has_rallied := false
 
 var _tower: Tower
 var _enemies: EnemyPool
@@ -34,7 +37,11 @@ var _marker_spin := 0.0
 func setup(enemies: EnemyPool, tower: Tower) -> void:
 	_enemies = enemies
 	_tower = tower
-	rally_point = tower.position + Vector2(0, -110)
+	# Below the mothership, deliberately opposite the first spawn arc, which
+	# comes in from straight up. The squad used to start parked on the only
+	# active lane, which meant the opening minutes asked the player for no
+	# commands at all — the run now poses its central question immediately.
+	rally_point = tower.position + Vector2(0, 110)
 	queue_redraw()
 
 func total_units() -> int:
@@ -106,6 +113,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton \
 			and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		rally_point = get_global_mouse_position()
+		has_rallied = true
 		queue_redraw()
 
 func _process(delta: float) -> void:
