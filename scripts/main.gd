@@ -29,6 +29,12 @@ var xp := 0
 var level := 1
 var pending_levelups := 0
 var pulse_tier := 0
+## Stacks taken of each repeatable damage pick. Counters rather than
+## reading the weapon back, because the card title needs to name the stack
+## the player is about to take, not the damage it happens to sit at.
+var rail_power := 0
+var pulse_power := 0
+var barrage_power := 0
 var _picks_offered := 0
 
 func xp_to_next() -> int:

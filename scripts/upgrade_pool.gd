@@ -41,6 +41,49 @@ static func _squad_options(main: Node) -> Array[Dictionary]:
 		})
 	return options
 
+const NUMERALS := ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]
+
+## Label for the stack a repeatable pick is about to add. Unlike the
+## one-time tiers these have no ceiling — a long run can stack past X — so
+## this falls back to a count instead of indexing off the end.
+static func _stack_label(taken: int) -> String:
+	return NUMERALS[taken] if taken < NUMERALS.size() else "x%d" % (taken + 1)
+
+## The flat damage picks the POC deliberately did without. They are allowed
+## in only where the alternative is worse: past exhaustion the choice is not
+## "interesting pick vs boring pick", it is "boring pick vs nothing at all",
+## and the run currently answers that with nothing while enemy HP keeps
+## scaling. Tower weapons only — their damage is a plain node property,
+## whereas DroneDef is a shared preloaded resource and buffing a drone would
+## mutate the .tres for the whole editor session rather than this run.
+static func _sustain_options(main: Node) -> Array[Dictionary]:
+	return [
+		{
+			"id": "rail_power",
+			"title": "Rail: overcharge %s" % _stack_label(main.rail_power),
+			"desc": "+5 Rail damage per shot",
+			"apply": func() -> void:
+				main.rail_power += 1
+				main.rail.damage += 5.0,
+		},
+		{
+			"id": "pulse_power",
+			"title": "Pulse: amplitude %s" % _stack_label(main.pulse_power),
+			"desc": "+3 Pulse damage per burst",
+			"apply": func() -> void:
+				main.pulse_power += 1
+				main.pulse.damage += 3.0,
+		},
+		{
+			"id": "barrage_power",
+			"title": "Barrage: heavier payload %s" % _stack_label(main.barrage_power),
+			"desc": "+25 Barrage impact damage",
+			"apply": func() -> void:
+				main.barrage_power += 1
+				main.barrage.damage += 25.0,
+		},
+	]
+
 static func _tower_options(main: Node) -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	if not main.pulse.enabled:
@@ -81,8 +124,17 @@ static func _tower_options(main: Node) -> Array[Dictionary]:
 			"desc": "Impacts echo once for 50% damage",
 			"apply": func() -> void: main.barrage.aftershock = true,
 		})
-	# Repeatable fallback so late level-ups stay meaningful after the
-	# real upgrades run out; only offered when actually damaged.
+	# An empty list here is the gate: every behaviour upgrade is taken, which
+	# by the XP curve happens around 4:49 — eleven seconds before the Carrier,
+	# with three minutes of climbing enemy HP still to come. Without these the
+	# remaining level-ups of the run are discarded outright.
+	#
+	# It also means Pulse is unlocked, since unlock_pulse is offered for as
+	# long as it is not, so the Pulse pick below needs no guard of its own.
+	if options.is_empty():
+		options.append_array(_sustain_options(main))
+	# Heals sit alongside whatever else is on offer, not only at the end;
+	# only offered when actually damaged.
 	if main.tower.hp < main.tower.max_hp:
 		options.append({
 			"id": "emergency_repairs",

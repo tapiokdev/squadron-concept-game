@@ -41,6 +41,13 @@ const DREADNOUGHT := preload("res://data/enemies/dreadnought.tres")
 ## Fraction of spawns that roll into each special type once unlocked.
 @export var bulwark_share := 0.05
 @export var interceptor_share := 0.08
+## Bulwarks are where the late game's total HP actually lives. Because a
+## capped band falls through to Swarmer rather than being dropped, this is a
+## relief valve rather than a nerf: it binds only once Bulwarks are already
+## surviving long enough to pile up, which is exactly when the player is
+## losing. At the post-elite share it sits near 1.5-4.5 alive in a run going
+## well, so 6 is invisible until it isn't.
+@export var bulwark_max_live := 6
 ## The elite moment from the brief (~min 5). It also steps the Bulwark
 ## share up, so the boss arrives with some added texture — but nothing
 ## more. Firing the Carrier and opening the whole heavy roster on the same
@@ -111,7 +118,7 @@ func _bands() -> Array[Dictionary]:
 				"max_live": dreadnought_max_live},
 		{"def": BULWARK, "after": bulwark_after_sec,
 				"share": bulwark_share_late if late else bulwark_share,
-				"any_angle": false, "max_live": 0},
+				"any_angle": false, "max_live": bulwark_max_live},
 		# Interceptors come in off-angle to punish tunnel vision on the main arc.
 		{"def": INTERCEPTOR, "after": interceptor_after_sec,
 				"share": interceptor_share, "any_angle": true, "max_live": 0},
