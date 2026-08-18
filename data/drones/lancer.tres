@@ -11,6 +11,6 @@ speed = 100.0
 radius = 9.0
 attack_damage = 8.0
 attack_interval = 0.9
-attack_range = 260.0
+attack_range = 165.0
 base_respawn = 10.0
 color = Color(0.55, 0.95, 1, 1)
