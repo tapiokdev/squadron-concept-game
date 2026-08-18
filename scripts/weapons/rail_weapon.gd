@@ -42,8 +42,10 @@ func _process(delta: float) -> void:
 	FxLayer.burst(muzzle, Palette.RAIL, 3, 110.0, 0.16, base_dir.angle(), 0.9)
 	# Quietest thing in the mix by a wide margin: it repeats all run, so it
 	# is meant to sit under everything rather than be listened to. The pitch
-	# jitter is what keeps it from reading as a machine gun.
-	Sfx.play(&"rail", randf_range(0.94, 1.1), -19.0)
+	# jitter is what keeps it from reading as a machine gun. Trimmed a dB
+	# when the sample gained its high zip — the same dB reads louder once
+	# there is content where the ear is most sensitive.
+	Sfx.play(&"rail", randf_range(0.94, 1.1), -20.0)
 	for i in spread_count:
 		var offset := deg_to_rad(spread_step_deg) * (float(i) - (spread_count - 1) * 0.5)
 		_projectiles.try_spawn(

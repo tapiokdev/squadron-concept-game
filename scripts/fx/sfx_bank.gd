@@ -31,42 +31,66 @@ static func build_all() -> Dictionary:
 		&"deploy": _deploy(),
 	}
 
-## A soft thunk, not a zap. This fires every 0.7s from the first second of
-## a run to the last — several hundred times — so it carries no square edge
-## and almost no top end. The rail shot you can see is the real feedback; this
-## only has to say the tower is still working.
+## A blaster, not a knock. The earlier version swept 430->150Hz, which is
+## acoustically a thud — it was built as a crossbow bolt and still read as
+## one. A weapon's sci-fi signature lives at 1-3kHz, but this fires every
+## 0.7s from the first second of a run to the last, so it cannot simply move
+## up there and get bright.
+##
+## So it splits, the same way the level-up sting does: the body stays low
+## where it carries weight without fatiguing, and a brief zip on top does
+## the identifying. The ear is 15-20dB more sensitive at 1-2kHz than in the
+## bass, which is why the zip's amplitude can be a third of the body's and
+## still be the part you notice.
 static func _rail() -> AudioStreamWAV:
 	var count := int(RATE * 0.07)
 	var out := _buffer(count)
 	var rng := _rng(7)
-	var phase := 0.0
+	var body_phase := 0.0
+	var zip_phase := 0.0
 	var smoothed := 0.0
 	for i in count:
 		var t := float(i) / float(count)
+		var time := float(i) / float(RATE)
 		# sqrt() lands on the low note within a few ms, so the drop reads as
 		# a transient rather than a sweep you can follow down.
-		phase += TAU * lerpf(430.0, 150.0, sqrt(t)) / RATE
+		body_phase += TAU * lerpf(300.0, 120.0, sqrt(t)) / RATE
+		# Sweep and decay both run on absolute seconds, so this stays a 20ms
+		# zip if the sound's overall length is ever retuned.
+		zip_phase += TAU * lerpf(1900.0, 800.0, minf(time / 0.020, 1.0)) / RATE
 		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), NOISE_SMOOTH)
 		# The 1.5ms ramp is there to kill the DC-step pop and nothing else —
-		# too short to soften the attack, because a thunk needs its click.
-		out[i] = (sin(phase) * 0.5 * exp(-17.0 * t)
-				+ smoothed * 0.10 * exp(-48.0 * t)) * minf(t / 0.0015, 1.0)
+		# too short to soften the attack, because a shot needs its edge.
+		out[i] = (sin(body_phase) * 0.42 * exp(-19.0 * t)
+				+ sin(zip_phase) * 0.13 * exp(-90.0 * time)
+				+ smoothed * 0.07 * exp(-60.0 * t)) * minf(t / 0.0015, 1.0)
 	return _pcm(out)
 
 ## Capacitor dump: a low sweep with an audible swell rather than a click,
-## so it reads as a discharge building and releasing.
+## so it reads as a discharge building and releasing. The swell is the right
+## gesture and is kept.
+##
+## It used to bottom out at 68Hz, which is below what a laptop speaker
+## reproduces at all — so on the hardware this actually ships to, the AoE
+## burst was very nearly silent. Raised to sit where it can be heard.
 static func _pulse() -> AudioStreamWAV:
 	var count := int(RATE * 0.45)
 	var out := _buffer(count)
 	var rng := _rng()
 	var phase := 0.0
+	var ring_phase := 0.0
 	var smoothed := 0.0
 	for i in count:
 		var t := float(i) / float(count)
-		phase += TAU * lerpf(215.0, 68.0, t) / RATE
+		var freq := lerpf(330.0, 130.0, t)
+		phase += TAU * freq / RATE
+		# 2.4x, deliberately not a whole number: an integer ratio is a
+		# harmonic and would only thicken the note, where an irrational one
+		# beats against it and reads as metal.
+		ring_phase += TAU * freq * 2.4 / RATE
 		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), NOISE_SMOOTH)
 		var env := minf(t / 0.09, 1.0) * exp(-3.4 * t)
-		out[i] = (sin(phase) * 0.55 + smoothed * 0.14) * env
+		out[i] = (sin(phase) * 0.5 + sin(ring_phase) * 0.16 + smoothed * 0.12) * env
 	return _pcm(out)
 
 ## Orbital strike: a sharp crack over a long low boom.
