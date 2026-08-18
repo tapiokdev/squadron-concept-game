@@ -32,7 +32,7 @@ static func play(id: StringName, pitch: float = 1.0, volume_db: float = 0.0) -> 
 
 func _ready() -> void:
 	instance = self
-	# The level-up screen pauses the tree and still needs its sting.
+	# The level-up screen pauses the tree and still needs its roll.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_bank = SfxBank.build_all()
 	for i in VOICES:

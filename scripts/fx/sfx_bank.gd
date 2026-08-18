@@ -6,10 +6,10 @@ extends RefCounted
 ## be sourced, licensed, or shipped, and the whole palette stays tunable
 ## as numbers in this file.
 ##
-## Everything is 16-bit mono at 22 kHz. These are short, bright, mostly
-## noisy sounds where a higher rate buys nothing audible, and the bank
-## totals well under three seconds of audio, which keeps both the web
-## download and the one-time generation cost small.
+## Everything is 16-bit mono at 22 kHz. These are short, mostly noisy
+## sounds with little above a few kHz, so a higher rate buys nothing
+## audible, and the bank totals under three seconds of audio, which keeps
+## both the web download and the one-time generation cost small.
 ##
 ## Noise uses a fixed seed so the bank is identical every run — a death
 ## pop that is subtly different each launch reads as a glitch.
@@ -31,16 +31,26 @@ static func build_all() -> Dictionary:
 		&"summon": _summon(),
 	}
 
-## Descending zap with a square edge for bite, softened by the sine under
-## it so a bolt every 0.7s never becomes fatiguing.
+## A soft thunk, not a zap. This fires every 0.7s from the first second of
+## a run to the last — several hundred times — so it carries no square edge
+## and almost no top end. The bolt you can see is the real feedback; this
+## only has to say the tower is still working.
 static func _bolt() -> AudioStreamWAV:
-	var count := int(RATE * 0.10)
+	var count := int(RATE * 0.07)
 	var out := _buffer(count)
+	var rng := _rng(7)
 	var phase := 0.0
+	var smoothed := 0.0
 	for i in count:
 		var t := float(i) / float(count)
-		phase += TAU * lerpf(1500.0, 520.0, t * t) / RATE
-		out[i] = (sin(phase) * 0.6 + signf(sin(phase)) * 0.22) * exp(-6.0 * t) * 0.5
+		# sqrt() lands on the low note within a few ms, so the drop reads as
+		# a transient rather than a sweep you can follow down.
+		phase += TAU * lerpf(430.0, 150.0, sqrt(t)) / RATE
+		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), NOISE_SMOOTH)
+		# The 1.5ms ramp is there to kill the DC-step pop and nothing else —
+		# too short to soften the attack, because a thunk needs its click.
+		out[i] = (sin(phase) * 0.5 * exp(-17.0 * t)
+				+ smoothed * 0.10 * exp(-48.0 * t)) * minf(t / 0.0015, 1.0)
 	return _pcm(out)
 
 ## Capacitor dump: a low sweep with an audible swell rather than a click,
@@ -102,23 +112,31 @@ static func _hull() -> AudioStreamWAV:
 		out[i] = sin(phase) * 0.6 * exp(-9.0 * t) + smoothed * 0.22 * exp(-24.0 * t)
 	return _pcm(out)
 
-## Three ascending notes. Constant pitch per note, so the phase can be
-## computed directly instead of integrated.
+## Distant thunder. The pause and the panel already announce the level-up,
+## so this only has to confirm it — a roll with no crack in it, heard from
+## far enough off that distance has rounded the attack and stripped the top.
 static func _level() -> AudioStreamWAV:
-	var count := int(RATE * 0.55)
+	var count := int(RATE * 0.90)
 	var out := _buffer(count)
-	var notes := [523.25, 659.25, 880.0]
-	var starts := [0.0, 0.10, 0.20]
+	var rng := _rng(31)
+	var phase := 0.0
+	var lp1 := 0.0
+	var lp2 := 0.0
 	for i in count:
+		var t := float(i) / float(count)
 		var time := float(i) / float(RATE)
-		var sample := 0.0
-		for n in notes.size():
-			var local: float = time - starts[n]
-			if local < 0.0:
-				continue
-			sample += sin(TAU * float(notes[n]) * local) \
-					* exp(-4.5 * local) * minf(local / 0.01, 1.0) * 0.3
-		out[i] = sample
+		# Two poles, not the usual one: a single NOISE_SMOOTH pass still
+		# hisses enough to read as static rather than weather. Cascading
+		# costs most of the amplitude, hence the makeup gain below.
+		lp1 = lerpf(lp1, rng.randf_range(-1.0, 1.0), 0.10)
+		lp2 = lerpf(lp2, lp1, 0.10)
+		phase += TAU * lerpf(90.0, 45.0, sqrt(t)) / RATE
+		# Two incommensurate wobbles, so the roll never settles into a beat.
+		var roll := 0.62 + 0.26 * sin(TAU * 3.1 * time) + 0.12 * sin(TAU * 1.7 * time)
+		var env := minf(t / 0.022, 1.0) * exp(-3.2 * t)
+		# The sine is weight for headphones, not the sound — laptop speakers
+		# reproduce nothing down there, so the filtered noise has to carry it.
+		out[i] = (lp2 * 2.5 + sin(phase) * 0.22) * roll * env
 	return _pcm(out)
 
 ## Rising chirp for a unit arriving on station.
@@ -137,9 +155,13 @@ static func _buffer(count: int) -> PackedFloat32Array:
 	out.resize(count)
 	return out
 
-static func _rng() -> RandomNumberGenerator:
+## `offset` gives a generator its own noise sequence. Sounds that share a
+## seed also share their noise, which is fine for short pops but not for
+## the two long ones: thunder and a meteor overlapping would otherwise read
+## as a single doubled sound rather than two events.
+static func _rng(offset: int = 0) -> RandomNumberGenerator:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = NOISE_SEED
+	rng.seed = NOISE_SEED + offset
 	return rng
 
 static func _pcm(samples: PackedFloat32Array) -> AudioStreamWAV:
