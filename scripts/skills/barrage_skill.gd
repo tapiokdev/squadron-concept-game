@@ -159,7 +159,7 @@ func _draw_recharge_ring() -> void:
 	if _tower == null or not _tower.alive:
 		return
 	# Sits in the band the tower reserves for it, clear of the hull
-	# integrity ring inside and the shield arcs outside.
+	# integrity ring inside it and nothing of the tower's outside.
 	var ring_radius := _tower.radius + 11.0
 	if is_ready():
 		var beat := 0.5 + 0.5 * sin(_ready_pulse)
@@ -177,9 +177,9 @@ func _draw_recharge_ring() -> void:
 	_draw_recharge_head(ring_radius, fraction)
 
 ## A light running the recharge arc, the same construction as the level-up
-## panel's orbit. This ring sits 7px inside rotating shield arcs and 7px
-## outside the hull gauge, so a static fill is easy to lose in there —
-## motion at a rate unlike anything around it is what separates it.
+## panel's orbit. This ring sits only 7px outside the hull gauge, so a
+## static fill is easy to lose against it — motion at a rate unlike anything
+## around it is what separates the two.
 func _draw_recharge_head(ring_radius: float, fraction: float) -> void:
 	var center := _tower.position
 	var head_angle := -PI / 2.0 + TAU * fraction

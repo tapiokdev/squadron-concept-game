@@ -5,12 +5,20 @@ extends Node2D
 ## from skills and drones. If it dies, the run ends.
 ##
 ## Art note: `radius` is the combat radius, and enemies stop at their own
-## radius plus this one, so the solid hull is drawn inside it and only
-## the shield ring — obviously energy, not plating — extends past it.
+## radius plus this one.
+##
+## The condition band used to be a ring of gapped arcs rotating out at
+## radius * 1.85, and it lied twice. Rotating gaps are the visual language
+## of an energy screen you could slip between, and an attacker closes to
+## radius plus its own — inside that ring — before it can land a hit, so it
+## visibly crossed the "screen" first. `take_damage` has no mitigation of
+## any kind: every hit lands. The band is now plating, drawn inside the hull
+## where nothing can appear to pass through it.
+##
 ## Radial bands are shared with other systems and deliberately spaced so
-## they stay separable at actual size: radius+4 is the hull integrity ring
-## below, radius+11 is the barrage recharge ring drawn by BarrageSkill, and
-## the rotating shield arcs sit furthest out.
+## they stay separable at actual size: radius * 0.75 is the condition band,
+## radius+4 is the hull integrity ring, and radius+11 is the barrage
+## recharge ring drawn by BarrageSkill, furthest out.
 
 signal hp_changed(hp: float, max_hp: float)
 signal died
@@ -19,9 +27,10 @@ signal died
 @export var radius: float = 22.0
 
 const HULL_SIDES := 6
-const SHIELD_ARCS := 3
+## Steps in the coarse condition band. The hull integrity ring carries the
+## precise value; this is the read-at-a-glance version.
+const CONDITION_SEGMENTS := 3
 const HIT_FLASH_TIME := 0.22
-const SPIN_RATE := 0.34
 
 var hp: float = 0.0
 var alive := true
@@ -30,7 +39,6 @@ var _hull := PackedVector2Array()
 var _hull_loop := PackedVector2Array()
 var _core := PackedVector2Array()
 var _core_loop := PackedVector2Array()
-var _spin := 0.0
 var _pulse := 0.0
 var _hit_flash := 0.0
 
@@ -45,7 +53,6 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	var health := _health()
-	_spin += delta * SPIN_RATE
 	# The reactor beats faster the closer the hull is to failing — an
 	# alarm the player reads without looking at the number.
 	_pulse += delta * lerpf(2.0, 7.5, 1.0 - health)
@@ -97,11 +104,13 @@ func _draw() -> void:
 	# Hull lighting slides toward the danger colour as the ship is chewed
 	# up, so damage is legible from the silhouette alone.
 	var edge := Palette.TOWER.lerp(Palette.DANGER, (1.0 - health) * 0.85)
-	_draw_shield(health)
 	draw_colored_polygon(_hull, Palette.HULL)
 	draw_polyline(_hull_loop, Palette.hot(edge, 1.9), 2.0)
 	for i in HULL_SIDES:
 		draw_line(_core[i], _hull[i], Palette.hot(edge, 1.1), 1.5)
+	# After the hull fill, not before: the band sits inside the silhouette
+	# now, and the hull polygon is opaque enough to paint straight over it.
+	_draw_condition_band(health)
 	draw_colored_polygon(_core, Palette.HULL)
 	draw_polyline(_core_loop, Palette.hot(Palette.TOWER_CORE, 1.5), 1.5)
 	var beat := 0.5 + 0.5 * sin(_pulse)
@@ -112,25 +121,34 @@ func _draw() -> void:
 		draw_polyline(_hull_loop, Palette.hot(Palette.DANGER, 1.0 + 3.0 * flash), 3.0)
 	_draw_hull_ring(health)
 
-## Segmented shield ring. Segments go dark as the hull is worn down, so
-## the ship's condition reads at a glance from across the screen.
-func _draw_shield(health: float) -> void:
-	var ring_radius := radius * 1.85
-	var sweep := TAU / float(SHIELD_ARCS) * 0.52
-	var lit := maxi(1, ceili(SHIELD_ARCS * health))
-	for i in SHIELD_ARCS:
-		var start := _spin + TAU * float(i) / float(SHIELD_ARCS)
-		var color := Palette.hot(Palette.TOWER, 1.6) if i < lit \
-				else Palette.fade(Palette.TOWER, 0.16)
-		draw_arc(Vector2.ZERO, ring_radius, start, start + sweep, 16, color, 2.5, true)
+## Coarse condition band on the hull. Segments go dark as the ship is worn
+## down, so its state reads at a glance without reading a number.
+##
+## Full slices butted together, and still. The old version swept 52% of each
+## slice and rotated, which is exactly how a shield with gaps in it looks —
+## and there is no shield. Notches in the void colour cut the band into
+## countable steps, the same trick the HUD's hull bar uses, because a gauge
+## should read as divided rather than as breached.
+func _draw_condition_band(health: float) -> void:
+	var ring_radius := radius * 0.75
+	var slice := TAU / float(CONDITION_SEGMENTS)
+	var lit := maxi(1, ceili(CONDITION_SEGMENTS * health))
+	for i in CONDITION_SEGMENTS:
+		var start := -PI * 0.5 + slice * float(i)
+		var color := Palette.hot(Palette.TOWER, 1.5) if i < lit \
+				else Palette.fade(Palette.TOWER, 0.14)
+		draw_arc(Vector2.ZERO, ring_radius, start, start + slice, 14, color, 3.0, true)
+	for i in CONDITION_SEGMENTS:
+		var dir := Vector2.from_angle(-PI * 0.5 + slice * float(i))
+		draw_line(dir * (ring_radius - 3.0), dir * (ring_radius + 3.0), Palette.VOID, 1.5)
 
 func _draw_hull_ring(health: float) -> void:
 	var ring_radius := radius + 4.0
 	draw_arc(Vector2.ZERO, ring_radius, 0.0, TAU, 40, Palette.fade(Palette.TOWER, 0.14), 2.5)
 	if health <= 0.0:
 		return
-	# Kept dimmer than the shield arcs: this is a gauge, and the arcs are
-	# what should carry the ship's silhouette from across the screen.
+	# The precise reading, against the band's coarse three steps: this one
+	# answers "how much exactly", the band answers "how bad is it".
 	var color := Palette.TOWER.lerp(Palette.DANGER, clampf((1.0 - health) * 1.4, 0.0, 1.0))
 	draw_arc(Vector2.ZERO, ring_radius, -PI * 0.5, -PI * 0.5 + TAU * health, 40,
 		Palette.hot(color, 1.5), 2.5)
