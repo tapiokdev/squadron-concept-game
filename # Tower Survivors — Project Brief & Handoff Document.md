@@ -148,6 +148,11 @@ That property is what makes the caps worth having: total pressure stays flat, bu
 - **Cursor targeting:** `get_global_mouse_position()` is all you need for the barrage.
 - **Drone movement:** `move_toward()` toward the rally point is sufficient. All drones share one rally point and move as a squad — design around this; don't add per-unit targeting.
 - **Suppress the browser right-click menu.** RMB is the core rally-point input, so the browser context menu must be disabled on the game canvas or right-clicks will be hijacked. Lock this early since the whole drone system depends on it.
+- **A global `class_name` only resolves in an export if something loads the script.** This cost most of a day and will happen again if it is not written down. In the editor the class cache resolves every name for you, so anything compiles. In an exported build a name exists only once a real reference opens the file — scene `ExtResource` links and `preload()` count, a bare `Palette.TOWER` does not. Eight pure-utility classes (Palette, Shapes, GlowTexture, SfxBank, UpgradePool, Drone, Enemy, Projectile) are attached to no node and instantiated by nothing, so they were packed and never opened, and the first export died with *"Identifier 'Palette' not declared in the current scope"* on scripts that were perfectly fine.
+  - **The fix in place:** each consumer binds them with a local `const Palette = preload("res://scripts/fx/palette.gd")`. Call sites are unchanged because the const deliberately shadows the global name. This is order-independent, which the tempting one-line alternative — loading them once from `main.gd` — is not.
+  - **Cost:** ~31 warnings about constants shadowing global classes. That is the price of the fix, not a smell to clean up.
+  - **Do NOT "tidy" this by deleting the `class_name` from those eight.** It was tried. Those classes reference their own pools and squads by type (`_pool: EnemyPool`, `_squad: DroneSquad`), and those pools preload them back, so removing the global names turns every mutual reference into a preload cycle GDScript cannot resolve. The 31 warnings are cheaper than that.
+  - **Anything new with a `class_name` that nothing instantiates inherits this problem**, and it will only show up in an export.
 
 ---
 
@@ -157,8 +162,11 @@ That property is what makes the caps worth having: total pressure stays flat, bu
 - **Load size:** the browser downloads the WASM + PCK on every play. Keep assets small so the game starts fast — matters more for itch.io bounce rate than for a native build.
 - **Input focus:** the canvas needs focus to receive input; a click-to-start screen handles this cleanly. ✅ **Built** — `scripts/start_screen.gd`, which also covers the audio gesture below. Its effect on focus and audio cannot be verified outside a real web export, so it is the first thing to check on the first build.
 - **Audio:** browser audio needs a user gesture to start. Without the click-to-start gate the first run opens silent, which reads as "the game has no sound" rather than as a browser policy.
-- **Export mode matters more than it looks.** `project.godot` registers the Godot AI MCP plugin's `_mcp_game_helper` as an unconditional autoload, and Godot's default "Export all resources in the project" packs all 125 addon scripts — ~1.58 MB raw / ~427 KB gzipped of pure dev tooling. Only 5 files are actually reachable (~23 KB gzipped). **Set export mode to "Export selected scenes (and dependencies)".** Do *not* gitignore or delete `addons/` to solve it: the autoload plus the enabled `plugin.cfg` mean a fresh clone would fail to load. Runtime cost of the helper is negligible either way — its `_process` early-returns once `EngineDebugger.is_active()` is false.
-- **Export templates gate everything** — no templates, no preset, no build, no outside playtests. Editor → Manage Export Templates lets you tick individual platforms and "Install Selected Templates", so grab **Web only**; the full all-platform set is a much larger download this project has no use for. Templates are version-locked to the exact editor build (4.7.stable), so a Godot upgrade means re-downloading, and more platforms can be added later at any time.
+- **Export mode is "Export all resources in the project", deliberately.** "Export selected scenes (and dependencies)" looks attractive — it drops the ~400 KB of Godot AI MCP dev plugin that `project.godot` drags in via the `_mcp_game_helper` autoload — but the exporter follows `preload()` and scene `ExtResource` links *only*, so it silently omits anything reachable by class name alone and produces a build that fails in ways the editor cannot show you. Against a ~10 MB compressed engine payload that saving is about 4%, and it is not worth it. Do *not* gitignore or delete `addons/` either: the autoload plus the enabled `plugin.cfg` mean a fresh clone would fail to load. The helper's runtime cost is negligible regardless — its `_process` early-returns once `EngineDebugger.is_active()` is false.
+- **Script Export Mode: Compressed Binary Tokens.** Takes the pck from 1.82 MB to 1.02 MB. (Text mode was used briefly while diagnosing the `class_name` problem above and is not the culprit for anything.)
+- **Testing locally needs a web server.** A build opened from `file://` shows the Godot loading screen and then a fetch error — browsers block the `.wasm`/`.pck` requests, and the `.wasm` additionally needs an `application/wasm` MIME type to stream-compile. Use the button the editor shows between *Stop scene* and *Play edited Scene* when a runnable web preset exists, or upload to a private itch page. Hosting handles the MIME type for you.
+- **Measured sizes** (first successful build): `index.wasm` 39.5 MB on disk but ~10 MB served compressed, `index.pck` 1.02 MB, `index.js` 280 KB. The engine dominates; the whole game is about a tenth of the pck's own download. Any music file added would be the second-largest thing shipped, and audio does not compress further in transit.
+- **Export templates**: Editor → Manage Export Templates lets you tick individual platforms and "Install Selected Templates" — **Web only** is installed here (~86 MB), not the full all-platform set. Templates are version-locked to the exact editor build (4.7.stable), so a Godot upgrade means re-downloading.
 
 ---
 
@@ -181,7 +189,11 @@ Self-paced (no external deadline). Ordering still holds; dates dropped for the P
 | 5. Upgrade loop | XP, level-up screen, all upgrade content, wave/multi-lane scaling | ✅ Done |
 | 6. Art, audio, and feel | Assets, hit flash, screen shake, SFX, music | ✅ Done except music |
 | 7. Playtest and fix | Outside playtests, crash fixes, browser optimisation | 🔶 Own playtests done and acted on; shell built (click-to-start, restart). **Outside playtests are blocked on a web build.** |
-| 8. Publish | itch.io page, gif/trailer, web export, publish | Pending — export templates not yet installed, no `export_presets.cfg` |
+| 8. Publish | itch.io page, gif/trailer, web export, publish | 🔶 **Web export works.** Templates installed (Web only), `export_presets.cfg` committed, build verified loading clean in a browser. Remaining: itch page, gif/trailer, and the in-browser checks below. |
+
+**The web build runs, and that unblocks the four things nothing else could test:** RMB not opening the browser context menu (the drone system depends on it), audio unlocking via the click-to-start gate, canvas focus, and frame rate under a real swarm in WASM. None of these are observable in the editor.
+
+New itch pages are **private by default** — *"Newly created pages are private by default to give you a chance to adjust the design of it until you're satisfied with it"* — so the build can be uploaded and played before anyone else can see it. Upload a ZIP containing `index.html`; limits (1000 files, 500 MB) are far beyond what this project produces.
 
 **The roadmap ordering is misleading here.** Phase 7's *outside playtests* cannot happen until Phase 8's *web export* exists, because there is nothing to hand anyone. One chain gates the rest:
 
@@ -248,7 +260,7 @@ generated art would not.
 ## How to use this document
 Paste this at the top of a new Claude conversation to continue the project with full context.
 
-**Where things stand:** Phases 1–6 are built and the balance has been signed off on a cleared run. The game is playable in the editor and has never been exported. Music is the one unbuilt Phase 6 item.
+**Where things stand:** Phases 1–6 are built and the balance is signed off on a cleared run (played through including the mop-up finale, at 100 max hull). The web export works and loads clean in a browser. Music is the one unbuilt Phase 6 item, and is optional — the game is shippable without it.
 
 Good starting prompts, roughly in the order they matter:
 - *"Set up the web export preset and get a first build running"* — the gate on everything else
