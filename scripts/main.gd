@@ -189,7 +189,7 @@ func _end_run(won: bool) -> void:
 		# figure next to a completed eight-minute run and reads as the lesser
 		# achievement. Reaching the end is the whole story. It also answers
 		# the mop-up prompt in its own words.
-		hud.show_result("YOU SURVIVED UNTIL THE END")
+		hud.show_result("YOU SURVIVED THE INVASION")
 	elif in_mop_up:
 		hud.show_result("MOTHERSHIP DESTROYED\nthe last wave got through")
 	else:
