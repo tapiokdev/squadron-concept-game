@@ -13,6 +13,8 @@ extends Node
 ## the opening asking for no commands at all, because the squad starts
 ## parked on the only lane there is.
 
+const Enemy = preload("res://scripts/enemies/enemy.gd")
+
 const SWARMER := preload("res://data/enemies/swarmer.tres")
 const BULWARK := preload("res://data/enemies/bulwark.tres")
 const INTERCEPTOR := preload("res://data/enemies/interceptor.tres")

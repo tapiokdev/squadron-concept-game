@@ -4,6 +4,9 @@ extends Node2D
 ## win/lose state. End-of-run UI is a later phase; for now the HUD label
 ## announces the result.
 
+const Enemy = preload("res://scripts/enemies/enemy.gd")
+const UpgradePool = preload("res://scripts/upgrade_pool.gd")
+
 ## Tunable per the brief — 8 min starting point, revisit after playtests.
 @export var run_duration := 480.0
 ## Grace before the first control prompt. Long enough that a player who

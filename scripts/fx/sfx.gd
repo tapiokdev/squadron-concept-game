@@ -8,6 +8,8 @@ extends Node
 ## pooled enemies and weapons that shouldn't need wiring for something
 ## cosmetic, and the entry point no-ops when nothing is in the tree.
 
+const SfxBank = preload("res://scripts/fx/sfx_bank.gd")
+
 const VOICES := 12
 
 ## Floor between repeats of the same sound. A swarm wiping out fires

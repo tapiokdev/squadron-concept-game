@@ -8,6 +8,9 @@ extends Node2D
 ##   (base 10s, then +60% of base per extra copy: 16s, 22s, ...).
 ## Dead drones respawn at the tower after their timer and walk back.
 
+const Drone = preload("res://scripts/drones/drone.gd")
+const Palette = preload("res://scripts/fx/palette.gd")
+
 const MAX_UNITS := 6
 const RESPAWN_GROWTH := 0.6
 const SLOT_RADIUS := 22.0

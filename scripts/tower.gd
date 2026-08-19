@@ -21,6 +21,9 @@ extends Node2D
 ## they stay separable at actual size: radius+4 is the hull integrity ring,
 ## radius+11 is the barrage recharge ring drawn by BarrageSkill.
 
+const Palette = preload("res://scripts/fx/palette.gd")
+const Shapes = preload("res://scripts/fx/shapes.gd")
+
 signal hp_changed(hp: float, max_hp: float)
 signal died
 

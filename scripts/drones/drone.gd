@@ -13,6 +13,10 @@ extends Node2D
 ## redraw, hit flash by `modulate`. Condition shows in the hull tint,
 ## which is rotation-proof — an HP arc would spin with the ship.
 
+const Enemy = preload("res://scripts/enemies/enemy.gd")
+const Palette = preload("res://scripts/fx/palette.gd")
+const Shapes = preload("res://scripts/fx/shapes.gd")
+
 signal died(drone: Drone)
 
 const STOP_DISTANCE := 3.0

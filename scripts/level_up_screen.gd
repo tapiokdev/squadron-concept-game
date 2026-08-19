@@ -10,6 +10,9 @@ extends CanvasLayer
 ## screen alternates squad and tower picks, and the player should see
 ## which one they're being handed before reading a word.
 
+const GlowTexture = preload("res://scripts/fx/glow_texture.gd")
+const Palette = preload("res://scripts/fx/palette.gd")
+
 signal choice_made
 
 const SQUAD_ACCENT := Palette.COMMAND

@@ -4,6 +4,9 @@ extends Area2D
 ## Pooled straight-line projectile. Area2D with monitoring on, watching the
 ## enemy collision layer; despawns on first hit or at max range.
 
+const Enemy = preload("res://scripts/enemies/enemy.gd")
+const Palette = preload("res://scripts/fx/palette.gd")
+
 signal despawned(projectile: Projectile)
 
 var damage: float = 0.0

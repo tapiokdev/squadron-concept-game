@@ -17,6 +17,9 @@ extends Node2D
 ## something purely cosmetic. The static entry points no-op when no
 ## layer is in the tree, so nothing has to null-check.
 
+const GlowTexture = preload("res://scripts/fx/glow_texture.gd")
+const Palette = preload("res://scripts/fx/palette.gd")
+
 const MAX_SPARKS := 700
 const MAX_RINGS := 24
 const MAX_FLASHES := 24

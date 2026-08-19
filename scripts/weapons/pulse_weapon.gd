@@ -5,6 +5,8 @@ extends Node2D
 ## the starting kit — the Phase 5 upgrade screen offers it, so it ships
 ## disabled. Behaviour upgrades later just raise radius / lower cooldown.
 
+const Palette = preload("res://scripts/fx/palette.gd")
+
 @export var enabled := false
 @export var damage := 7.0
 @export var cooldown := 2.2

@@ -4,6 +4,8 @@ extends Node2D
 ## Pool for Projectile nodes, mirroring EnemyPool. max_live is a safety
 ## valve for the browser frame budget, not a design knob.
 
+const Projectile = preload("res://scripts/projectile.gd")
+
 @export var max_live: int = 200
 @export var prewarm: int = 32
 

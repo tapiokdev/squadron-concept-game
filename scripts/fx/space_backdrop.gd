@@ -10,6 +10,9 @@ extends Node2D
 ## and the whole backdrop is about 30 primitives. The nebula breathes so
 ## the screen never looks like a static wallpaper.
 
+const GlowTexture = preload("res://scripts/fx/glow_texture.gd")
+const Palette = preload("res://scripts/fx/palette.gd")
+
 const GRID_SPACING := 96.0
 const GRID_MAJOR_EVERY := 4
 ## Fixed seed: the starfield should look authored, not different per run.

@@ -9,6 +9,8 @@ extends Node2D
 ## try_spawn(), which refuses once the cap is reached. Callers must handle
 ## a null return by skipping the spawn.
 
+const Enemy = preload("res://scripts/enemies/enemy.gd")
+
 @export var max_live: int = 150
 @export var prewarm: int = 48
 

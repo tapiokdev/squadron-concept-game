@@ -5,6 +5,9 @@ extends Node
 ## enemy on a fixed cooldown, no player input. The behaviour upgrade from
 ## the brief ("spread of 3") is just spread_count = 3 later.
 
+const Enemy = preload("res://scripts/enemies/enemy.gd")
+const Palette = preload("res://scripts/fx/palette.gd")
+
 @export var damage := 12.0
 @export var cooldown := 0.7
 @export var projectile_speed := 500.0

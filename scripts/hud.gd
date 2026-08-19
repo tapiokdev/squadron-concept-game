@@ -12,6 +12,8 @@ extends CanvasLayer
 ## The tower carries its own condition ring; this is the precise readout
 ## for when the player needs a number rather than an impression.
 
+const Palette = preload("res://scripts/fx/palette.gd")
+
 const BAR_ORIGIN := Vector2(18.0, 46.0)
 const BAR_SIZE := Vector2(210.0, 12.0)
 ## Ticks give the bar a scale, so "how much is left" is judgeable.

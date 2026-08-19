@@ -10,6 +10,9 @@ extends Node2D
 ## just flavour: it is the window in which the player reads whether the
 ## cast was well aimed, so the marked radius is drawn exactly.
 
+const GlowTexture = preload("res://scripts/fx/glow_texture.gd")
+const Palette = preload("res://scripts/fx/palette.gd")
+
 @export var damage := 60.0
 @export var radius := 110.0
 @export var cooldown := 5.5

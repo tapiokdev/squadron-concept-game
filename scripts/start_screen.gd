@@ -18,6 +18,8 @@ extends CanvasLayer
 ## in the run has ticked when the player finally clicks, so the timer starts
 ## at a genuine zero however long the page sat there.
 
+const Palette = preload("res://scripts/fx/palette.gd")
+
 const PANEL_WIDTH := 430
 const PROMPT_RATE := 2.4
 

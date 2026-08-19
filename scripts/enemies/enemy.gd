@@ -5,6 +5,10 @@ extends Area2D
 ## Built entirely in code (no scene file) so the pool can cheaply
 ## instantiate and reconfigure instances from any EnemyDef.
 
+const Drone = preload("res://scripts/drones/drone.gd")
+const Palette = preload("res://scripts/fx/palette.gd")
+const Shapes = preload("res://scripts/fx/shapes.gd")
+
 signal died(enemy: Enemy)
 
 const ENEMY_COLLISION_LAYER := 2
