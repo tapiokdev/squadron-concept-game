@@ -153,12 +153,12 @@ That property is what makes the caps worth having: total pressure stays flat, bu
 
 ## Browser / itch.io export notes (for the export phase)
 - Export target: Godot **Web (HTML5 / WASM)**.
-- **Threads:** Godot web threading needs cross-origin isolation (SharedArrayBuffer). itch.io has a "SharedArrayBuffer support" toggle in the embed settings that sets the required headers. Single-threaded export is the safest default; enable threads only if the perf budget demands it and it's tested on itch.
+- **Threads:** Godot web threading needs cross-origin isolation (SharedArrayBuffer). itch.io is believed to expose a "SharedArrayBuffer support" toggle in the embed settings that sets the required headers — **unverified**, and itch's own HTML5 documentation does not mention it, so confirm in the embed UI before relying on it. Single-threaded export is the safest default and sidesteps the question entirely; enable threads only if the perf budget demands it and it is tested on itch.
 - **Load size:** the browser downloads the WASM + PCK on every play. Keep assets small so the game starts fast — matters more for itch.io bounce rate than for a native build.
 - **Input focus:** the canvas needs focus to receive input; a click-to-start screen handles this cleanly. ✅ **Built** — `scripts/start_screen.gd`, which also covers the audio gesture below. Its effect on focus and audio cannot be verified outside a real web export, so it is the first thing to check on the first build.
 - **Audio:** browser audio needs a user gesture to start. Without the click-to-start gate the first run opens silent, which reads as "the game has no sound" rather than as a browser policy.
 - **Export mode matters more than it looks.** `project.godot` registers the Godot AI MCP plugin's `_mcp_game_helper` as an unconditional autoload, and Godot's default "Export all resources in the project" packs all 125 addon scripts — ~1.58 MB raw / ~427 KB gzipped of pure dev tooling. Only 5 files are actually reachable (~23 KB gzipped). **Set export mode to "Export selected scenes (and dependencies)".** Do *not* gitignore or delete `addons/` to solve it: the autoload plus the enabled `plugin.cfg` mean a fresh clone would fail to load. Runtime cost of the helper is negligible either way — its `_process` early-returns once `EngineDebugger.is_active()` is false.
-- **Export templates are a ~1 GB one-time download** (Editor → Manage Export Templates), and they gate everything: no preset, no build, no outside playtests.
+- **Export templates gate everything** — no templates, no preset, no build, no outside playtests. Editor → Manage Export Templates lets you tick individual platforms and "Install Selected Templates", so grab **Web only**; the full all-platform set is a much larger download this project has no use for. Templates are version-locked to the exact editor build (4.7.stable), so a Godot upgrade means re-downloading, and more platforms can be added later at any time.
 
 ---
 
