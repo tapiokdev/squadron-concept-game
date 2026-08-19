@@ -181,7 +181,16 @@ func _end_run(won: bool) -> void:
 	hud.update_run(run_duration - elapsed, tower.hp, tower.max_hp,
 		level, xp, xp_to_next(), enemy_pool.live_count)
 	if won:
-		hud.show_result("YOU SURVIVED\n%d:%02d" % [total / 60, total % 60])
+		# The run length is a constant, so printing it said nothing — every
+		# win read 8:00. How long the final field took to clear is the one
+		# number a win actually earns, and unlike the end time it rewards
+		# finishing fast rather than slowly. Omitted when the safety cap
+		# ended it, because then the field was never cleared at all.
+		var text := "YOU SURVIVED"
+		if enemy_pool.live_count == 0:
+			var clear_secs := int(MOP_UP_TIMEOUT - _mop_up_left)
+			text += "\nfield cleared in %d:%02d" % [clear_secs / 60, clear_secs % 60]
+		hud.show_result(text)
 	elif in_mop_up:
 		hud.show_result("MOTHERSHIP DESTROYED\nthe last wave got through")
 	else:
