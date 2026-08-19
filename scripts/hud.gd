@@ -17,6 +17,9 @@ const BAR_SIZE := Vector2(210.0, 12.0)
 ## Ticks give the bar a scale, so "how much is left" is judgeable.
 const BAR_SEGMENTS := 7
 const XP_STRIP_HEIGHT := 3.0
+## How far the result banner sits above centre, clearing the mothership and
+## its rings without drifting up into the timer.
+const BANNER_LIFT := 110.0
 
 ## Anchors only resolve against a Control parent, so everything lives
 ## under one full-rect root rather than directly on the CanvasLayer.
@@ -70,6 +73,10 @@ func _ready() -> void:
 	_banner.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_banner.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	# The mothership sits dead centre of the viewport, so a centred banner
+	# lands right on top of it. Shrinking the rect from the bottom lifts the
+	# text by half the amount taken off.
+	_banner.offset_bottom = -BANNER_LIFT * 2.0
 	_banner.visible = false
 
 func _add_label(font_size: int, color: Color) -> Label:
