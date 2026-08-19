@@ -24,7 +24,11 @@ extends Node2D
 signal hp_changed(hp: float, max_hp: float)
 signal died
 
-@export var max_hp: float = 140.0
+## Lowered from 140 on playtest: runs were bottoming out around 60 and
+## finishing well above 100, so a third of the bar was never in play. The
+## same ~80 damage now leaves 20 rather than 60 — the danger is real where
+## it was theoretical, without touching a single enemy number.
+@export var max_hp: float = 100.0
 @export var radius: float = 22.0
 
 const HULL_SIDES := 6
