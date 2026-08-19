@@ -212,7 +212,14 @@ func _perimeter(rect: Rect2, u: float) -> Vector2:
 
 func _on_pick(opt: Dictionary) -> void:
 	opt.apply.call()
+	dismiss()
+	choice_made.emit()
+
+## Close without taking anything. Picking is the normal way out, but a run
+## that ends while this is open would otherwise leave the result banner
+## buried under a choice that no longer matters, and the tree paused behind
+## a dead tower.
+func dismiss() -> void:
 	set_process(false)
 	visible = false
 	get_tree().paused = false
-	choice_made.emit()

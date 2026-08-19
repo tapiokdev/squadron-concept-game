@@ -16,6 +16,11 @@ const HINT_DELAY := 4.0
 ## regardless. This exists only so a shipped build cannot hang on one
 ## straggler that somehow never arrives.
 const MOP_UP_TIMEOUT := 60.0
+## Beat between the result appearing and the restart accepting input. A run
+## ends in the middle of a fight the player is still clicking through, and
+## without this the click that killed the last hostile takes the result
+## screen with it.
+const RESTART_ARM_DELAY := 0.9
 
 @onready var enemy_pool: EnemyPool = $EnemyPool
 @onready var projectile_pool: ProjectilePool = $ProjectilePool
@@ -37,6 +42,7 @@ var run_over := false
 ## thirty seconds are the run's climax rather than a lap of honour.
 var mopping_up := false
 var _mop_up_left := 0.0
+var _restart_armed := false
 
 ## XP curve tuned so a meaningful build (both drone types, stacking,
 ## 1-2 weapon upgrades) is assembled by the ~min 5 elite. Tune freely.
@@ -69,6 +75,11 @@ func _ready() -> void:
 	# Free starting drone so the rally-point mechanic is engaged
 	# immediately (brief: first offer drone-only OR free start).
 	squad.try_add_drone(BASTION)
+	# Prime the readout. The start screen pauses the tree before any of this
+	# runs, so without one push the panel sits over an empty bar frame with
+	# no timer and no numbers.
+	hud.update_run(run_duration, tower.hp, tower.max_hp,
+		level, xp, xp_to_next(), 0)
 
 func _process(delta: float) -> void:
 	if run_over:
@@ -158,6 +169,11 @@ func _end_run(won: bool) -> void:
 	mopping_up = false
 	spawner.active = false
 	hud.hide_hint()
+	# The level-up screen pauses the tree, so a run cannot normally end while
+	# it is open — but if one ever did, the result would sit buried under a
+	# choice that no longer applies, with the tree paused behind a dead tower.
+	if level_up_screen.visible:
+		level_up_screen.dismiss()
 	var survived := int(elapsed)
 	var total := int(run_duration)
 	# _process bails once the run is over, so push the final numbers in
@@ -172,4 +188,29 @@ func _end_run(won: bool) -> void:
 		hud.show_result("MOTHERSHIP DESTROYED\nsurvived %d:%02d of %d:%02d" % [
 			survived / 60, survived % 60, total / 60, total % 60,
 		])
-	print("[run] over — %s at %ds" % ["won" if won else "lost", survived])
+	# The run's own input is spent. Left alone, the click that restarts would
+	# also call a barrage over the wreck on its way out.
+	squad.set_process_unhandled_input(false)
+	barrage.set_process_unhandled_input(false)
+	get_tree().create_timer(RESTART_ARM_DELAY).timeout.connect(
+			func() -> void:
+				_restart_armed = true
+				hud.show_hint("CLICK TO PLAY AGAIN"))
+
+## Reloading the scene rather than resetting state by hand: everything in a
+## run lives on these nodes, and the three static singletons (Sfx, FxLayer,
+## GameCamera) each clear themselves only if they are still the current one,
+## so a reload hands over cleanly.
+func _unhandled_input(event: InputEvent) -> void:
+	if not _restart_armed:
+		return
+	var go: bool = event is InputEventMouseButton and event.pressed
+	if event is InputEventKey and event.pressed and not event.echo:
+		go = true
+	if not go:
+		return
+	_restart_armed = false
+	# A level-up screen open at the final frame would otherwise hand the new
+	# run a paused tree.
+	get_tree().paused = false
+	get_tree().reload_current_scene()

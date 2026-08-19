@@ -16,6 +16,7 @@
 [ext_resource type="Script" uid="uid://qhrd1qio6xrm" path="res://scripts/fx/fx_layer.gd" id="13_w48qg"]
 [ext_resource type="Script" uid="uid://cmlyvg1boj2c4" path="res://scripts/fx/game_camera.gd" id="14_vivmo"]
 [ext_resource type="Script" uid="uid://bfc782dtykup5" path="res://scripts/fx/sfx.gd" id="16_2cqfq"]
+[ext_resource type="Script" uid="uid://cnojmx6kwstgs" path="res://scripts/start_screen.gd" id="17_yaehf"]
 
 [node name="Main" type="Node2D" unique_id=2138863706]
 script = ExtResource("1_0xm2m")
@@ -64,3 +65,6 @@ script = ExtResource("14_vivmo")
 
 [node name="Sfx" type="Node" parent="." unique_id=908569530]
 script = ExtResource("16_2cqfq")
+
+[node name="StartScreen" type="CanvasLayer" parent="." unique_id=2085837171]
+script = ExtResource("17_yaehf")
