@@ -10,6 +10,12 @@ extends Node2D
 ## already knows the game never sees it, short enough that one who does not
 ## is not left watching the tower take hits.
 const HINT_DELAY := 4.0
+## Safety cap on the mop-up phase. Every enemy paths at the tower, so the
+## field converges on its own — a Swarmer crosses from the far edge in about
+## 9s, a Dreadnought in 27 — and a live Carrier keeps launching its brood
+## regardless. This exists only so a shipped build cannot hang on one
+## straggler that somehow never arrives.
+const MOP_UP_TIMEOUT := 60.0
 
 @onready var enemy_pool: EnemyPool = $EnemyPool
 @onready var projectile_pool: ProjectilePool = $ProjectilePool
@@ -26,6 +32,11 @@ const BASTION := preload("res://data/drones/bastion.tres")
 
 var elapsed := 0.0
 var run_over := false
+## Reaching the timer stops the spawner but does not end the run: the field
+## still has to be cleared. The tower stays killable throughout, so the last
+## thirty seconds are the run's climax rather than a lap of honour.
+var mopping_up := false
+var _mop_up_left := 0.0
 
 ## XP curve tuned so a meaningful build (both drone types, stacking,
 ## 1-2 weapon upgrades) is assembled by the ~min 5 elite. Tune freely.
@@ -73,10 +84,15 @@ func _process(delta: float) -> void:
 			var title: String = "LEVEL UP — reinforce your squad" if offer.track == "squad" \
 					else "LEVEL UP — upgrade your tower"
 			level_up_screen.offer(offer.options, title)
-	elapsed += delta
-	if elapsed >= run_duration:
-		_end_run(true)
-		return
+	if mopping_up:
+		_mop_up_left -= delta
+		if enemy_pool.live_count == 0 or _mop_up_left <= 0.0:
+			_end_run(true)
+			return
+	else:
+		elapsed += delta
+		if elapsed >= run_duration:
+			_begin_mop_up()
 	_update_hints()
 	hud.update_run(run_duration - elapsed, tower.hp, tower.max_hp,
 		level, xp, xp_to_next(), enemy_pool.live_count)
@@ -91,6 +107,12 @@ func _process(delta: float) -> void:
 ## follows once the squad is placed, rather than competing for the same
 ## glance.
 func _update_hints() -> void:
+	# Outranks the opening chain, which is long finished by the eight-minute
+	# mark anyway. The timer reads 0:00 through this phase, so without a line
+	# here the run looks won while it is still very much winnable-or-not.
+	if mopping_up:
+		hud.show_hint("SURVIVE UNTIL THE END")
+		return
 	if _hints_done:
 		return
 	if not squad.has_rallied:
@@ -112,11 +134,30 @@ func _on_enemy_killed(amount: int) -> void:
 		level += 1
 		pending_levelups += 1
 
+## The timer running out stops reinforcements, not the fight. Everything
+## else keeps going — XP, level-ups, the Barrage recharging — because
+## `run_over` stays false; only spawning and the clock stop.
+##
+## A live Carrier is deliberately left alone. Its brood comes from
+## Enemy._process under Behavior.SPAWNER, not from the spawner node, so
+## killing the boss becomes the actual finale rather than an optional
+## side-task.
+func _begin_mop_up() -> void:
+	mopping_up = true
+	_mop_up_left = MOP_UP_TIMEOUT
+	spawner.active = false
+
 func _end_run(won: bool) -> void:
 	if run_over:
 		return
 	run_over = true
+	# Captured before clearing: dying with the field uncleared is a different
+	# result from being overrun at 6:30, and "survived 8:00 of 8:00" would
+	# read as a win.
+	var in_mop_up := mopping_up
+	mopping_up = false
 	spawner.active = false
+	hud.hide_hint()
 	var survived := int(elapsed)
 	var total := int(run_duration)
 	# _process bails once the run is over, so push the final numbers in
@@ -125,6 +166,8 @@ func _end_run(won: bool) -> void:
 		level, xp, xp_to_next(), enemy_pool.live_count)
 	if won:
 		hud.show_result("YOU SURVIVED\n%d:%02d" % [total / 60, total % 60])
+	elif in_mop_up:
+		hud.show_result("MOTHERSHIP DESTROYED\nthe last wave got through")
 	else:
 		hud.show_result("MOTHERSHIP DESTROYED\nsurvived %d:%02d of %d:%02d" % [
 			survived / 60, survived % 60, total / 60, total % 60,
