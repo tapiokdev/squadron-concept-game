@@ -34,6 +34,13 @@ const TRAIL_STEP := 8.0
 ## to land in, which is worth more than volume ever was.
 const STING_DELAY := 0.15
 
+## Beat between the cards appearing and them accepting a click. A level-up
+## interrupts a fight the player is already clicking through, and the barrage
+## is on the same button — so without this the card that happens to be under
+## the cursor takes a click that was aimed at the battlefield. Short enough
+## that nobody reaching for a card ever feels it.
+const ARM_DELAY := 0.3
+
 var _title: Label
 var _buttons_box: VBoxContainer
 var _panel: PanelContainer
@@ -42,6 +49,9 @@ var _orbit: Control
 var _orbit_glow: GradientTexture2D
 var _orbit_phase := 0.0
 var _orbit_accent := TOWER_ACCENT
+## Counts down while the cards are inert. Driven from _process rather than a
+## SceneTreeTimer so it cannot outlive the offer that started it.
+var _arm_left := 0.0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -91,6 +101,10 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_orbit_phase = fposmod(_orbit_phase + delta / ORBIT_PERIOD, 1.0)
 	_orbit.queue_redraw()
+	if _arm_left > 0.0:
+		_arm_left -= delta
+		if _arm_left <= 0.0:
+			_arm_cards()
 
 func offer(options: Array[Dictionary], title: String = "LEVEL UP — choose one") -> void:
 	var accent := SQUAD_ACCENT if title.contains("squad") else TOWER_ACCENT
@@ -105,6 +119,9 @@ func offer(options: Array[Dictionary], title: String = "LEVEL UP — choose one"
 	# read as deliberate instead of catching a loop already in progress.
 	_orbit_accent = accent
 	_orbit_phase = 0.0
+	# Cards are built inert (see _make_card); this starts the clock that makes
+	# them live.
+	_arm_left = ARM_DELAY
 	set_process(true)
 	visible = true
 	get_tree().paused = true
@@ -123,6 +140,9 @@ func offer(options: Array[Dictionary], title: String = "LEVEL UP — choose one"
 
 func _make_card(opt: Dictionary, accent: Color) -> Button:
 	var card := Button.new()
+	# Ignores the mouse until armed, so a click inside the delay is swallowed
+	# by the dim backdrop rather than pressing a card that will not answer.
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.text = "%s\n%s" % [String(opt.title).to_upper(), opt.desc]
 	card.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	card.add_theme_font_size_override("font_size", 14)
@@ -214,6 +234,10 @@ func _perimeter(rect: Rect2, u: float) -> Vector2:
 	return rect.position + Vector2(0.0, h - (d - w))
 
 func _on_pick(opt: Dictionary) -> void:
+	# Covers the keyboard path too: the first card takes focus as the screen
+	# opens, so a player mid-keypress could otherwise commit sight unseen.
+	if _arm_left > 0.0:
+		return
 	opt.apply.call()
 	dismiss()
 	choice_made.emit()
@@ -226,3 +250,9 @@ func dismiss() -> void:
 	set_process(false)
 	visible = false
 	get_tree().paused = false
+
+## Hands the cards back to the mouse once the arm delay has elapsed. Only
+## ever turns them on — every offer rebuilds them, and they are born inert.
+func _arm_cards() -> void:
+	for card in _buttons_box.get_children():
+		card.mouse_filter = Control.MOUSE_FILTER_STOP
