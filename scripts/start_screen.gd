@@ -51,8 +51,8 @@ func _ready() -> void:
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(box)
 
-	_add(box, "TOWER SURVIVORS", 28, Palette.neon(Palette.TOWER, 1.2))
-	_add(box, "hold the mothership for eight minutes", 13,
+	_add(box, "SURVIVE THE INVASION", 28, Palette.neon(Palette.TOWER, 1.2))
+	_add(box, "defend the mothership for eight minutes", 13,
 		Color(0.62, 0.76, 0.90))
 	_spacer(box, 10)
 	_add(box, "RIGHT-CLICK     rally your drones", 14, Palette.neon(Palette.COMMAND, 1.0))
