@@ -198,6 +198,10 @@ func _process(delta: float) -> void:
 		_band = move_toward(_band, _band_target, _band_rate * delta)
 		_apply_band()
 	if is_equal_approx(_db, _db_target) and is_equal_approx(_band, _band_target):
+		if DIAG:
+			var hi: float = _high.cutoff_hz if _high != null else -1.0
+			var lo: float = _low.cutoff_hz if _low != null else -1.0
+			print("[audio] settled db=%.1f band=%.2f hi=%.0f lo=%.0f" % [_db, _band, hi, lo])
 		set_process(false)
 
 ## Geometric rather than linear, because frequency is perceived in ratios:
