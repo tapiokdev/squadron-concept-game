@@ -297,11 +297,10 @@ is the only asset file in the project.
 ## How to use this document
 Paste this at the top of a new Claude conversation to continue the project with full context.
 
-**Where things stand:** Phases 1–6 are complete, music included, and the balance is signed off on a cleared run (played through including the mop-up finale, at 100 max hull). The web export works and loads clean in a browser — but **the build in `build/web/` is stale**: it predates the music, the current title, and the level-up channel effect. Two things have therefore never run in a real browser: the music itself, and the audio-bus DSP behind the level-up effect. The export is single-threaded and this is the first DSP the project has ever used, so that is a genuine unknown of the same kind the audio gesture was.
+**Where things stand:** Phases 1–6 are complete, music included, and the balance is signed off on a cleared run (played through including the mop-up finale, at 100 max hull). The web export works, and **everything is now confirmed in a real browser** — music, SFX, and the audio-bus DSP behind the level-up channel effect, the last of which was the final unknown. Verified from the browser console with `Music.DIAG`: driver `AudioWorklet`, mix rate 48000 (the same as desktop), bus bound, and the cutoffs measured sweeping 20/20500 → 380/2900 Hz and back on a level-up. Nothing about the audio path differs between desktop and web.
 
 Good starting prompts, roughly in the order they matter:
-- *"Re-export the web build and check it in a browser"* — the gate on publishing, and the only way to close the two unknowns above
-- *"Set up the itch.io page and upload the build"* — new pages are private by default, so this is safe to do before it is ready to show
+- *"Set up the itch.io page and upload the build"* — nothing technical blocks publishing any more, and new pages are private by default, so this is safe to do before it is ready to show
 - *"Make a gif or short trailer"* — what it needs to communicate is that you never move
 - *"Review the enemy spawn band table in scripts/enemy_spawner.gd"*
 
