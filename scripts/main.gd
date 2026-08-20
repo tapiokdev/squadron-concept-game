@@ -96,7 +96,7 @@ func _process(delta: float) -> void:
 			pending_levelups -= 1
 			_picks_offered += 1
 			var title: String = "LEVEL UP — reinforce your squad" if offer.track == "squad" \
-					else "LEVEL UP — upgrade your tower"
+					else "LEVEL UP — upgrade your mothership"
 			level_up_screen.offer(offer.options, title)
 	if mopping_up:
 		_mop_up_left -= delta

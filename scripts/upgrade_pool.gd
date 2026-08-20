@@ -90,7 +90,7 @@ static func _tower_options(main: Node) -> Array[Dictionary]:
 		options.append({
 			"id": "unlock_pulse",
 			"title": "New weapon: Pulse",
-			"desc": "AoE burst around the tower — answers swarms",
+			"desc": "AoE burst around the mothership — answers swarms",
 			"apply": func() -> void: main.pulse.enabled = true,
 		})
 	elif main.pulse_tier < 2:
@@ -139,7 +139,7 @@ static func _tower_options(main: Node) -> Array[Dictionary]:
 		options.append({
 			"id": "emergency_repairs",
 			"title": "Emergency repairs",
-			"desc": "Restore 25 tower HP",
+			"desc": "Restore 25 mothership HP",
 			"apply": func() -> void: main.tower.heal(25.0),
 		})
 	return options
