@@ -190,12 +190,16 @@ Self-paced (no external deadline). Ordering still holds; dates dropped for the P
 | 4. Drone system | Rally points, stacking, unit cap, 2 drone types | ✅ Done |
 | 5. Upgrade loop | XP, level-up screen, all upgrade content, wave/multi-lane scaling | ✅ Done |
 | 6. Art, audio, and feel | Assets, hit flash, screen shake, SFX, music | ✅ Done |
-| 7. Playtest and fix | Outside playtests, crash fixes, browser optimisation | 🔶 Own playtests done and acted on; shell built (click-to-start, restart). **Outside playtests are blocked on a web build.** |
-| 8. Publish | itch.io page, gif/trailer, web export, publish | 🔶 **Web export works.** Templates installed (Web only), `export_presets.cfg` committed, build verified loading clean in a browser. Remaining: itch page, gif/trailer, and the in-browser checks below. |
+| 7. Playtest and fix | Outside playtests, crash fixes, browser optimisation | 🔶 Own playtests done and acted on; shell built (click-to-start, restart). **No longer blocked** — the build is up on itch and someone else has loaded it. Outside playtests can start whenever. |
+| 8. Publish | itch.io page, gif/trailer, web export, publish | 🔶 **Uploaded and working.** Web export builds clean, `export_presets.cfg` committed, and the game has been played from the itch page on a machine that is not the developer's, fast on both Firefox and Chrome. Remaining: make the page public, gif/trailer. |
 
 **The web build runs, and a full run has been playtested in a browser — all four things nothing else could test are confirmed:** **RMB places the rally point** with no context-menu hijack (Godot's default web shell handles this — the suppression worried about since Phase 1 needed no work), **LMB casts the Barrage**, so the canvas takes focus, and **no perceptible lag** under a real swarm in WASM. **Browser audio works** through the click-to-start gate, so the synthesised SFX bank plays as intended on the web.
 
 New itch pages are **private by default** — *"Newly created pages are private by default to give you a chance to adjust the design of it until you're satisfied with it"* — so the build can be uploaded and played before anyone else can see it. Upload a ZIP containing `index.html`; limits (1000 files, 500 MB) are far beyond what this project produces.
+
+**Packaging for itch.** Zip the *contents* of `build/web/`, not the folder — `index.html` must sit at the zip root or itch will not find it. Exclude the `.import` files that accumulate in there (the editor scans `build/` as part of the project and generates import metadata for the exported icon PNGs; they are not part of the game). Nine files, ~15.7 MB zipped, of which the wasm is 10.1 MB and the pck 6.2 MB. On upload, tick **"This file will be played in the browser"**, set kind HTML, viewport 1280×720, and leave **SharedArrayBuffer support off** — the build is single-threaded precisely so it does not need cross-origin isolation.
+
+**A local network problem once looked exactly like a broken build, and cost an evening.** The embedded game on the itch page hung forever in Firefox and loaded very slowly in Chrome, while the same build on `localhost` was instant. It was a **VPN**: large transfers were being truncated (`NS_ERROR_NET_PARTIAL_TRANSFER` on the 39.5 MB wasm) while small requests were unaffected. Disabling it fixed it outright. Two things made this hard to see — an ad blocker was independently blocking requests on the same page, and opening the iframe's direct URL happened to succeed, which pointed suspicion at the embed rather than the network. **The test that would have settled it in a minute: load the page from a phone hotspot,** which swaps the whole network path while keeping the same machine and browser. Do that before suspecting the build, the engine, or itch.
 
 **The roadmap ordering was misleading, and this chain is now resolved.** Phase 7's *outside playtests* could not happen until Phase 8's *web export* existed, because there was nothing to hand anyone. Kept as a record of what gated what:
 
@@ -299,8 +303,10 @@ Paste this at the top of a new Claude conversation to continue the project with 
 
 **Where things stand:** Phases 1–6 are complete, music included, and the balance is signed off on a cleared run (played through including the mop-up finale, at 100 max hull). The web export works, and **everything is now confirmed in a real browser** — music, SFX, and the audio-bus DSP behind the level-up channel effect, the last of which was the final unknown. Verified from the browser console with `Music.DIAG`: driver `AudioWorklet`, mix rate 48000 (the same as desktop), bus bound, and the cutoffs measured sweeping 20/20500 → 380/2900 Hz and back on a level-up. Nothing about the audio path differs between desktop and web.
 
+The build is on itch, still private, and has been played there by someone other than the developer on both Firefox and Chrome. Nothing technical is outstanding.
+
 Good starting prompts, roughly in the order they matter:
-- *"Set up the itch.io page and upload the build"* — nothing technical blocks publishing any more, and new pages are private by default, so this is safe to do before it is ready to show
+- *"Get outside playtests"* — the thing the whole POC exists for: is the core loop fun? Everything else has been answered
 - *"Make a gif or short trailer"* — what it needs to communicate is that you never move
 - *"Review the enemy spawn band table in scripts/enemy_spawner.gd"*
 
