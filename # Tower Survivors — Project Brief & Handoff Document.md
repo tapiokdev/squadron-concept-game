@@ -306,6 +306,6 @@ Good starting prompts, roughly in the order they matter:
 
 **Conventions worth knowing before changing anything:**
 - Difficulty was tuned **deliberately easy** across several playtests. Do not re-harden constants without a fresh one — for a POC, frustration blocks the "is it fun?" question the build exists to answer.
-- There are no art assets and there should be none: every shape comes from `Shapes`/`Palette` and every sound effect from `SfxBank`. The music track in `audio/` is a single deliberate exception, not licence to add more — it alone costs 47% of the download.
+- There are no art assets and there should be none: every shape comes from `Shapes`/`Palette` and every sound effect from `SfxBank`. The music track in `audio/` is a single deliberate exception, not licence to add more — it alone costs 47% of the download. It is credited in `CREDITS.md` and on the start screen; the Pixabay licence does not require that, and it is done anyway. Anything else ever added goes in `CREDITS.md` too.
 - **The name is unsettled.** This document and the repo folder say *Tower Survivors* (after the WC3 mod that inspired it), `project.godot` says *Squadron Concept Game*, and the start screen reads *SURVIVE THE INVASION*, which the win banner answers with *YOU SURVIVED THE INVASION*. Nothing in the code depends on resolving this, but the itch page will force the question.
 - Prefer giving the player a rising curve over flattening the enemy curve. The late-game fix that worked was repeatable damage picks, not nerfing enemies.

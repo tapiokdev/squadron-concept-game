@@ -59,6 +59,15 @@ func _ready() -> void:
 	_add(box, "LEFT-CLICK      call a barrage", 14, Palette.neon(Palette.BARRAGE, 1.0))
 	_spacer(box, 12)
 	_prompt = _add(box, "CLICK TO BEGIN", 16, Palette.neon(Palette.TOWER, 1.3))
+	_spacer(box, 14)
+	# The Pixabay licence does not require attribution. This is here because
+	# using someone's work without naming them is a choice, not because a
+	# licence forced one. Deliberately the quietest thing on the panel — the
+	# artist gets named, the prompt above keeps the eye. Licence terms and the
+	# link live on the itch page and in CREDITS.md, where someone looking for
+	# them will actually look.
+	_add(box, "music by Cyberwave-Orchestra · Pixabay", 11,
+		Color(0.42, 0.52, 0.64))
 
 	get_tree().paused = true
 
