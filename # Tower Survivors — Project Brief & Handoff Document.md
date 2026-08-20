@@ -165,7 +165,7 @@ That property is what makes the caps worth having: total pressure stays flat, bu
 - **Export mode is "Export all resources in the project", deliberately.** "Export selected scenes (and dependencies)" looks attractive — it drops the ~400 KB of Godot AI MCP dev plugin that `project.godot` drags in via the `_mcp_game_helper` autoload — but the exporter follows `preload()` and scene `ExtResource` links *only*, so it silently omits anything reachable by class name alone and produces a build that fails in ways the editor cannot show you. Against a ~10 MB compressed engine payload that saving is about 4%, and it is not worth it. Do *not* gitignore or delete `addons/` either: the autoload plus the enabled `plugin.cfg` mean a fresh clone would fail to load. The helper's runtime cost is negligible regardless — its `_process` early-returns once `EngineDebugger.is_active()` is false.
 - **Script Export Mode: Compressed Binary Tokens.** Takes the pck from 1.82 MB to 1.02 MB. (Text mode was used briefly while diagnosing the `class_name` problem above and is not the culprit for anything.)
 - **Testing locally needs a web server.** A build opened from `file://` shows the Godot loading screen and then a fetch error — browsers block the `.wasm`/`.pck` requests, and the `.wasm` additionally needs an `application/wasm` MIME type to stream-compile. Use the button the editor shows between *Stop scene* and *Play edited Scene* when a runnable web preset exists, or upload to a private itch page. Hosting handles the MIME type for you.
-- **Measured sizes** (first successful build): `index.wasm` 39.5 MB on disk but ~10 MB served compressed, `index.pck` 1.02 MB, `index.js` 280 KB. The engine dominates; the whole game is about a tenth of the pck's own download. Any music file added would be the second-largest thing shipped, and audio does not compress further in transit.
+- **Measured sizes** (first successful build, before music): `index.wasm` 39.5 MB on disk but ~10 MB served compressed, `index.pck` 1.02 MB, `index.js` 280 KB. The engine dominates; the whole game is about a tenth of the pck's own download. **Music changed that.** The track is 5.2 MB and gzips by 0.5% — it is already compressed — so it lands whole on an ~11 MB build: a **47% increase in download**, and the second-largest thing shipped after the engine. The source is 256 kbps; re-encoding to 128 would recover about 3 MB if the download ever matters. It is already in git history, so a re-encode leaves both copies in the repo unless history is rewritten.
 - **Export templates**: Editor → Manage Export Templates lets you tick individual platforms and "Install Selected Templates" — **Web only** is installed here (~86 MB), not the full all-platform set. Templates are version-locked to the exact editor build (4.7.stable), so a Godot upgrade means re-downloading.
 
 ---
@@ -187,7 +187,7 @@ Self-paced (no external deadline). Ordering still holds; dates dropped for the P
 | 3. LMB active skill | Cursor-aimed cooldown barrage, playable core loop | ✅ Done |
 | 4. Drone system | Rally points, stacking, unit cap, 2 drone types | ✅ Done |
 | 5. Upgrade loop | XP, level-up screen, all upgrade content, wave/multi-lane scaling | ✅ Done |
-| 6. Art, audio, and feel | Assets, hit flash, screen shake, SFX, music | ✅ Done except music |
+| 6. Art, audio, and feel | Assets, hit flash, screen shake, SFX, music | ✅ Done |
 | 7. Playtest and fix | Outside playtests, crash fixes, browser optimisation | 🔶 Own playtests done and acted on; shell built (click-to-start, restart). **Outside playtests are blocked on a web build.** |
 | 8. Publish | itch.io page, gif/trailer, web export, publish | 🔶 **Web export works.** Templates installed (Web only), `export_presets.cfg` committed, build verified loading clean in a browser. Remaining: itch page, gif/trailer, and the in-browser checks below. |
 
@@ -195,17 +195,18 @@ Self-paced (no external deadline). Ordering still holds; dates dropped for the P
 
 New itch pages are **private by default** — *"Newly created pages are private by default to give you a chance to adjust the design of it until you're satisfied with it"* — so the build can be uploaded and played before anyone else can see it. Upload a ZIP containing `index.html`; limits (1000 files, 500 MB) are far beyond what this project produces.
 
-**The roadmap ordering is misleading here.** Phase 7's *outside playtests* cannot happen until Phase 8's *web export* exists, because there is nothing to hand anyone. One chain gates the rest:
+**The roadmap ordering was misleading, and this chain is now resolved.** Phase 7's *outside playtests* could not happen until Phase 8's *web export* existed, because there was nothing to hand anyone. Kept as a record of what gated what:
 
 ```
-export templates (~1 GB, Editor → Manage Export Templates)
-  └→ export preset ("Export selected scenes (and dependencies)")
-       └→ first web build
-            ├→ verifies RMB context-menu suppression  ← never tested, and the
-            │                                            whole drone mechanic
-            │                                            depends on it
-            └→ verifies browser audio + canvas focus
-                 └→ outside playtests become possible
+export templates (Web only, ~86 MB)              ✅ installed
+  └→ export preset                               ✅ committed
+     │   "Export all resources in the project" — "selected scenes"
+     │   is what broke the first build; see the export notes above
+     └→ first web build                          ✅ loads clean
+          ├→ RMB context-menu suppression        ✅ needed no work
+          ├→ browser audio + canvas focus        ✅ click-to-start gate
+          └→ no perceptible lag under a swarm    ✅
+               └→ outside playtests now blocked only on the upload
 ```
 
 ---
@@ -225,10 +226,11 @@ export templates (~1 GB, Editor → Manage Export Templates)
 ---
 
 ## Art direction (locked in Phase 6)
-Neon sci-fi vector, no sprites or audio assets anywhere — everything is drawn
-from primitives and every sound is synthesised at load. Chosen because the POC
-has no artist, and geometry plus a disciplined palette reads as deliberate where
-generated art would not.
+Neon sci-fi vector: no sprites anywhere, everything drawn from primitives, and
+every *sound effect* synthesised at load. Chosen because the POC has no artist,
+and geometry plus a disciplined palette reads as deliberate where generated art
+would not. **The music track is the one deliberate exception** — see below. It
+is the only asset file in the project.
 
 - **Fiction:** the tower is a stationary **mothership**; enemies are a hostile fleet.
 - **Colour rule:** cool blues are yours, warm and magenta is hostile, green is
@@ -253,22 +255,53 @@ generated art would not.
   lives (the Rail's 1.9kHz zip, the level-up's 1.4kHz tick) rather than making
   it louder, and remember a 68Hz fundamental is inaudible on the laptop
   speakers this actually ships to.
-- **Still open:** music.
+- **Music is the only asset in the project, and it earns its own bus.** One
+  looping underscore (Pixabay 300694, 2:45, in `audio/`), owned by
+  `scripts/fx/music.gd`, reached statically like `Sfx` and `FxLayer`. It starts
+  on the click that begins the run rather than at load: a browser will not
+  resume its audio context without a real user gesture, so a track started in
+  `_ready()` plays into a suspended context and is lost or picked up mid-phrase.
+  `StartScreen` already collects that gesture for the SFX bank; the music rides
+  the same one.
+- **The level-up screen ducks the music and puts it through a channel.** This
+  restores an intent that predated the music. The sting is delayed `0.15s` so it
+  lands in a room the pause has cleared — but `Music` runs
+  `PROCESS_MODE_ALWAYS` by design (stopping dead on every pick is worse than no
+  music), which made it the one thing still playing and the only thing the sting
+  had to cut through. So while the panel is open the track drops 3 dB and its
+  high-/low-pass cutoffs sweep to a 380–2900 Hz band. The level clears inside
+  `STING_DELAY`; the band deliberately runs on past it, because getting out of
+  the way wants to be quick while closing a band onto a signal wants to be heard
+  happening. The filters stay *enabled* and only their cutoffs move — toggling an
+  effect mid-playback swaps processing on a buffer boundary and can click, where
+  a sweep cannot. The sweep is geometric, since frequency is perceived in ratios.
+  **`AudioServer` outlives a scene reload**, so `_ready` adopts an existing
+  `Music` bus rather than stacking a duplicate, and resets the cutoffs — without
+  that, restarting from inside a level-up leaves the music band-limited for good.
+  SFX stay on Master and are untouched, which is the point.
+- **A screen that opens under the cursor must not accept the click that opened
+  it.** A level-up interrupts a fight the player is already clicking through, and
+  the Barrage is on the same button, so whichever card landed under the cursor
+  took clicks aimed at the battlefield. Cards are now born `MOUSE_FILTER_IGNORE`
+  and armed 0.3s later, so a click in that window falls through to the dim
+  backdrop; `_on_pick` guards on the same timer, since the first card takes focus
+  and a keypress could otherwise commit sight unseen.
 
 ---
 
 ## How to use this document
 Paste this at the top of a new Claude conversation to continue the project with full context.
 
-**Where things stand:** Phases 1–6 are built and the balance is signed off on a cleared run (played through including the mop-up finale, at 100 max hull). The web export works and loads clean in a browser. Music is the one unbuilt Phase 6 item, and is optional — the game is shippable without it.
+**Where things stand:** Phases 1–6 are complete, music included, and the balance is signed off on a cleared run (played through including the mop-up finale, at 100 max hull). The web export works and loads clean in a browser — but **the build in `build/web/` is stale**: it predates the music, the current title, and the level-up channel effect. Two things have therefore never run in a real browser: the music itself, and the audio-bus DSP behind the level-up effect. The export is single-threaded and this is the first DSP the project has ever used, so that is a genuine unknown of the same kind the audio gesture was.
 
 Good starting prompts, roughly in the order they matter:
-- *"Set up the web export preset and get a first build running"* — the gate on everything else
-- *"Suppress the browser right-click context menu"* — never tested, and RMB is the core input
-- *"Add music"* — the last Phase 6 item, deferred deliberately
+- *"Re-export the web build and check it in a browser"* — the gate on publishing, and the only way to close the two unknowns above
+- *"Set up the itch.io page and upload the build"* — new pages are private by default, so this is safe to do before it is ready to show
+- *"Make a gif or short trailer"* — what it needs to communicate is that you never move
 - *"Review the enemy spawn band table in scripts/enemy_spawner.gd"*
 
 **Conventions worth knowing before changing anything:**
 - Difficulty was tuned **deliberately easy** across several playtests. Do not re-harden constants without a fresh one — for a POC, frustration blocks the "is it fun?" question the build exists to answer.
-- There are no art or audio assets and there should be none: every shape comes from `Shapes`/`Palette` and every sound from `SfxBank`.
+- There are no art assets and there should be none: every shape comes from `Shapes`/`Palette` and every sound effect from `SfxBank`. The music track in `audio/` is a single deliberate exception, not licence to add more — it alone costs 47% of the download.
+- **The name is unsettled.** This document and the repo folder say *Tower Survivors* (after the WC3 mod that inspired it), `project.godot` says *Squadron Concept Game*, and the start screen reads *SURVIVE THE INVASION*, which the win banner answers with *YOU SURVIVED THE INVASION*. Nothing in the code depends on resolving this, but the itch page will force the question.
 - Prefer giving the player a rising curve over flattening the enemy curve. The late-game fix that worked was repeatable damage picks, not nerfing enemies.
