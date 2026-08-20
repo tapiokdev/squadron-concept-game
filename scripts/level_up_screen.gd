@@ -125,6 +125,11 @@ func offer(options: Array[Dictionary], title: String = "LEVEL UP — choose one"
 	set_process(true)
 	visible = true
 	get_tree().paused = true
+	# The music runs PROCESS_MODE_ALWAYS, so pausing does not quiet it.
+	# It is now the only thing still playing, and so the only thing the
+	# sting below has to cut through. The level duck completes inside
+	# STING_DELAY; the filter sweep deliberately runs on past it.
+	Music.duck()
 	# SceneTreeTimer processes while paused by default, which is the whole
 	# reason this works. The visible check covers a player who picks inside
 	# the delay — without it the sting lands in resumed combat, which is
@@ -249,6 +254,8 @@ func _on_pick(opt: Dictionary) -> void:
 func dismiss() -> void:
 	set_process(false)
 	visible = false
+	# Let the track back up before the world resumes, not after.
+	Music.unduck()
 	get_tree().paused = false
 
 ## Hands the cards back to the mouse once the arm delay has elapsed. Only
