@@ -167,6 +167,8 @@ That property is what makes the caps worth having: total pressure stays flat, bu
 - **Testing locally needs a web server.** A build opened from `file://` shows the Godot loading screen and then a fetch error — browsers block the `.wasm`/`.pck` requests, and the `.wasm` additionally needs an `application/wasm` MIME type to stream-compile. Use the button the editor shows between *Stop scene* and *Play edited Scene* when a runnable web preset exists, or upload to a private itch page. Hosting handles the MIME type for you.
 - **Measured sizes** (first successful build, before music): `index.wasm` 39.5 MB on disk but ~10 MB served compressed, `index.pck` 1.02 MB, `index.js` 280 KB. The engine dominates; the whole game is about a tenth of the pck's own download. **Music changed that.** The track is 5.2 MB and gzips by 0.5% — it is already compressed — so it lands whole on an ~11 MB build: a **47% increase in download**, and the second-largest thing shipped after the engine. The source is 256 kbps; re-encoding to 128 would recover about 3 MB if the download ever matters. It is already in git history, so a re-encode leaves both copies in the repo unless history is rewritten.
 - **Export templates**: Editor → Manage Export Templates lets you tick individual platforms and "Install Selected Templates" — **Web only** is installed here (~86 MB), not the full all-platform set. Templates are version-locked to the exact editor build (4.7.stable), so a Godot upgrade means re-downloading.
+- **Never build audio buses at runtime.** `AudioServer.add_bus()` from `_ready()` works perfectly on desktop and **silently kills all audio in the web export** — SFX included, though they sit on Master and never touched the new bus. The build boots clean, logs nothing, and simply has no sound; the editor cannot reproduce it. This cost a full export cycle to find. The buses now come from `default_bus_layout.tres` (generated with `AudioServer.generate_bus_layout()`, not hand-written) so they exist before the audio driver starts, and `music.gd` only looks them up. Do not move that back into code. Symptom to recognise: audio worked, a feature added a bus, now nothing plays in the browser.
+- **`print()` is the only window into a web build.** `music.gd` keeps a `const DIAG := false` that reports driver, bus count, master mute and player routing to the browser console. Flip it on for anything the editor cannot show. Also: a browser pane that is not *visible* has `document.hidden == true`, which stops `requestAnimationFrame` and therefore the whole game — readings taken from a hidden page mean nothing, and have already produced one round of false conclusions here.
 
 ---
 
@@ -275,10 +277,13 @@ is the only asset file in the project.
   happening. The filters stay *enabled* and only their cutoffs move — toggling an
   effect mid-playback swaps processing on a buffer boundary and can click, where
   a sweep cannot. The sweep is geometric, since frequency is perceived in ratios.
-  **`AudioServer` outlives a scene reload**, so `_ready` adopts an existing
-  `Music` bus rather than stacking a duplicate, and resets the cutoffs — without
-  that, restarting from inside a level-up leaves the music band-limited for good.
-  SFX stay on Master and are untouched, which is the point.
+  The bus and both filters are declared in `default_bus_layout.tres`, **not**
+  built in code — building them at runtime shipped a web build with no audio at
+  all; see the export notes. **`AudioServer` outlives a scene reload**, so
+  `_ready` resets the cutoffs on every run; without that, restarting from inside
+  a level-up leaves the music band-limited for good. SFX stay on Master and are
+  untouched, which is the point — and is also what made the web failure so
+  confusing, since they died too.
 - **A screen that opens under the cursor must not accept the click that opened
   it.** A level-up interrupts a fight the player is already clicking through, and
   the Barrage is on the same button, so whichever card landed under the cursor

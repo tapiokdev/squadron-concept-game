@@ -84,6 +84,8 @@ func _input(event: InputEvent) -> void:
 	get_tree().paused = false
 	# The same click is the browser audio gesture that lets a track start.
 	Music.start()
+	if Music.DIAG:
+		print("[audio] gesture received, gate released")
 	get_viewport().set_input_as_handled()
 
 func _add(box: VBoxContainer, text: String, size: int, color: Color) -> Label:

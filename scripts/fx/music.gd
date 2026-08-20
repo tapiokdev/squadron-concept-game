@@ -21,6 +21,13 @@ const TRACK := preload("res://audio/cyberwave_underscore_300694.mp3")
 
 const BUS_NAME := &"Music"
 
+## Flip to true to have the audio layer report itself. print() reaches the
+## browser console in a web build, which is the only window into what audio is
+## doing there — the editor cannot show it, and the failure this caught (see
+## _bind_bus) was invisible from anywhere else. Kept rather than deleted
+## because the next web audio problem will need exactly this again.
+const DIAG := false
+
 ## Sits under a bank whose loudest cue plays at -9 dB. Music needs more room
 ## than that number suggests, because those are transients and this is
 ## continuous — a level that matches them in peak buries them in average.
@@ -100,21 +107,25 @@ func _ready() -> void:
 	# The level-up screen pauses the tree, and music that stops dead every
 	# time the player takes a pick is worse than no music at all.
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	_ensure_bus()
-	# A restart reloads the scene but not the AudioServer, so the filters can
-	# still be sitting wherever the last run left them. Without this reset, a
-	# restart from inside a level-up leaves the music band-limited for good.
-	_band = 0.0
-	_band_target = 0.0
-	_apply_band()
 	_player = AudioStreamPlayer.new()
 	_player.process_mode = Node.PROCESS_MODE_ALWAYS
 	_player.stream = TRACK
 	_player.volume_db = SILENT_DB
-	# Set after _ensure_bus, since naming a bus that does not exist yet warns
-	# and silently falls back to Master.
-	_player.bus = BUS_NAME
 	add_child(_player)
+	_bind_bus()
+	# AudioServer is not part of the tree, so a scene reload finds the filters
+	# still sitting wherever the last run left them. Without this reset, a
+	# restart from inside a level-up leaves the music band-limited for good.
+	_band = 0.0
+	_band_target = 0.0
+	_apply_band()
+	if DIAG:
+		print("[audio] driver=%s rate=%d buses=%d music_bus=%d master_mute=%s master_db=%.1f" % [
+			AudioServer.get_driver_name(), AudioServer.get_mix_rate(),
+			AudioServer.get_bus_count(), AudioServer.get_bus_index(BUS_NAME),
+			AudioServer.is_bus_mute(0), AudioServer.get_bus_volume_db(0)])
+		print("[audio] track_len=%.1f player_bus=%s filters_bound=%s" % [
+			TRACK.get_length(), _player.bus, _high != null])
 	# Nothing to advance until a transition is running.
 	set_process(false)
 
@@ -122,31 +133,29 @@ func _exit_tree() -> void:
 	if instance == self:
 		instance = null
 
-## Built here rather than shipped as a default_bus_layout.tres: the project
-## has no audio assets by design, and these two filters exist only to serve
-## this one node.
-func _ensure_bus() -> void:
+## The bus and its two filters come from default_bus_layout.tres, which the
+## engine loads before any of this runs.
+##
+## They used to be built here with AudioServer.add_bus() at _ready time, and
+## that shipped a web build with **no audio at all** — SFX included, though
+## those were never on this bus. It works perfectly on desktop, so the editor
+## could not show it. Mutating the bus graph after the audio driver has
+## initialised is evidently a very different proposition on the web backend,
+## and when it goes wrong it takes Master down with it.
+##
+## Declaring the buses in a layout resource means they exist before the driver
+## starts, and nothing mutates the graph at runtime. Do not move this back into
+## code.
+func _bind_bus() -> void:
 	var idx := AudioServer.get_bus_index(BUS_NAME)
-	if idx != -1:
-		# AudioServer is not part of the tree, so a scene reload finds the
-		# bus from the previous run still standing. Adopt it — adding another
-		# would stack a duplicate on every restart.
-		_high = AudioServer.get_bus_effect(idx, 0) as AudioEffectFilter
-		_low = AudioServer.get_bus_effect(idx, 1) as AudioEffectFilter
+	if idx == -1:
+		# Layout missing or failed to load. Stay on Master rather than dying:
+		# the duck still works, only the filter sweep is lost.
+		push_warning("Music: bus not found in the layout; staying on Master.")
 		return
-	idx = AudioServer.get_bus_count()
-	AudioServer.add_bus(idx)
-	AudioServer.set_bus_name(idx, BUS_NAME)
-	AudioServer.set_bus_send(idx, &"Master")
-	# Order matters only in that _ensure_bus reads them back by index above.
-	_high = AudioEffectHighPassFilter.new()
-	_high.cutoff_hz = HIGH_OPEN
-	_high.db = AudioEffectFilter.FILTER_12DB
-	AudioServer.add_bus_effect(idx, _high)
-	_low = AudioEffectLowPassFilter.new()
-	_low.cutoff_hz = LOW_OPEN
-	_low.db = AudioEffectFilter.FILTER_12DB
-	AudioServer.add_bus_effect(idx, _low)
+	_high = AudioServer.get_bus_effect(idx, 0) as AudioEffectFilter
+	_low = AudioServer.get_bus_effect(idx, 1) as AudioEffectFilter
+	_player.bus = BUS_NAME
 
 ## Idempotent: a restart reloads the scene, so this node and its start screen
 ## are both new, but a stray second call within one run must not restart the
@@ -158,6 +167,8 @@ func _start() -> void:
 	_player.volume_db = _db
 	_player.play()
 	_to_db(VOLUME_DB, FADE_IN)
+	if DIAG:
+		print("[audio] music start: playing=%s db=%.1f" % [_player.playing, _player.volume_db])
 
 func _set_ducked(on: bool) -> void:
 	_band_target = 1.0 if on else 0.0
@@ -193,6 +204,11 @@ func _process(delta: float) -> void:
 ## this moves each cutoff a constant number of octaves per unit of _band. A
 ## linear sweep of the low-pass would spend nearly all its travel above
 ## hearing and then fall through the audible range in the last instant.
+##
+## No-ops when the bus was not found, so a missing layout costs the filter
+## sweep and nothing else.
 func _apply_band() -> void:
+	if _high == null or _low == null:
+		return
 	_high.cutoff_hz = HIGH_OPEN * pow(HIGH_BAND / HIGH_OPEN, _band)
 	_low.cutoff_hz = LOW_OPEN * pow(LOW_BAND / LOW_OPEN, _band)
