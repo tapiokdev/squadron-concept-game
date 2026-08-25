@@ -27,19 +27,27 @@ static func roll(main: Node, track: String, count: int = 3) -> Dictionary:
 static func _squad_options(main: Node) -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	if main.squad.total_units() < DroneSquad.MAX_UNITS:
-		options.append({
-			"id": "add_bastion",
-			"title": "Deploy Bastion",
-			"desc": "Heavy drone holds the line (redeploy grows per copy)",
-			"apply": func() -> void: main.squad.try_add_drone(BASTION),
-		})
-		options.append({
-			"id": "add_lancer",
-			"title": "Deploy Lancer",
-			"desc": "Standoff drone, fires at range (redeploy grows per copy)",
-			"apply": func() -> void: main.squad.try_add_drone(LANCER),
-		})
+		options.append(_drone_option("add_bastion", BASTION, main.squad,
+			"Heavy drone holds the line"))
+		options.append(_drone_option("add_lancer", LANCER, main.squad,
+			"Fragile drone fires from range"))
 	return options
+
+## Drone cards name the redeploy time of the unit on offer rather than the
+## rule that produces it. "Redeploy grows per copy" asked the player to do
+## the arithmetic at the one moment they could not — the card never said how
+## many they already had — and it read as a penalty on the whole type, which
+## it is not: the timer is fixed per unit at creation, so only the new one is
+## slower. The number says the true thing in fewer words, and a 22s card
+## sitting next to a 10s one argues for spreading the squad on its own.
+static func _drone_option(id: String, def: DroneDef, squad: DroneSquad,
+		blurb: String) -> Dictionary:
+	return {
+		"id": id,
+		"title": "Deploy %s %s" % [def.display_name, _stack_label(squad.count_of(def))],
+		"desc": "%s · %.0fs redeploy" % [blurb, squad.next_respawn(def)],
+		"apply": func() -> void: squad.try_add_drone(def),
+	}
 
 const NUMERALS := ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]
 

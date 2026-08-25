@@ -4,8 +4,9 @@ extends Node2D
 ## The squad manager and the core differentiator's plumbing:
 ## - RMB places the shared rally point; every drone moves toward it.
 ## - Shared unit cap (6 across all types) per the brief.
-## - Stacking: adding another copy of a type gives it a longer respawn
-##   (base 10s, then +60% of base per extra copy: 16s, 22s, ...).
+## - Stacking: adding another copy of a type gives that new unit a longer
+##   respawn (base 10s, then +60% of base per existing copy: 16s, 22s, ...).
+##   Fixed at creation, so copies already in the squad keep their own timer.
 ## Dead drones respawn at the tower after their timer and walk back.
 
 const Drone = preload("res://scripts/drones/drone.gd")
@@ -74,12 +75,20 @@ func count_of(def: DroneDef) -> int:
 			count += 1
 	return count
 
+## Respawn time the next copy of `def` would be built with. The level-up
+## card shows this before the player commits, so it has to come from the
+## same place try_add_drone reads it — a second copy of the formula is a
+## lie waiting to happen.
+func next_respawn(def: DroneDef) -> float:
+	return def.base_respawn * (1.0 + RESPAWN_GROWTH * count_of(def))
+
 func try_add_drone(def: DroneDef) -> bool:
 	if total_units() >= MAX_UNITS:
 		return false
-	var copies := count_of(def)
 	var unit := Drone.new()
-	unit.respawn_time = def.base_respawn * (1.0 + RESPAWN_GROWTH * copies)
+	# Read before the unit joins the roster: next_respawn counts existing
+	# copies, and this one is not one of them yet.
+	unit.respawn_time = next_respawn(def)
 	unit.died.connect(_on_drone_died)
 	add_child(unit)
 	unit.configure(self, def, _tower.position)
