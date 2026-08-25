@@ -19,6 +19,9 @@ const HIT_FLASH := Color(2.8, 2.8, 2.8)
 const FLASH_FADE := 11.0
 ## Carriers ignore their heading and turn slowly on the spot instead.
 const CARRIER_SPIN := 0.45
+## Facing changes smaller than this are not written. 0.001 rad moves the
+## rim of the widest hull by 0.02px, so nothing is given up.
+const FACING_EPSILON := 0.001
 
 ## How far the hull jabs at whatever it just hit, as a share of its own
 ## radius, and how long that settles — so a Dreadnought shoves where a
@@ -184,15 +187,27 @@ func _process(delta: float) -> void:
 				var offset := Vector2.from_angle(randf() * TAU) * (def.radius + 14.0)
 				_pool.try_spawn(def.spawned_def, global_position + offset, target, _hp_scale)
 
-## Rotation is a transform write, not a redraw, so turning every enemy
-## every frame is nearly free — the transform is already dirty from the
-## move. Carriers spin in place; everything else points where it's going.
+## Carriers spin in place; everything else points where it's going.
+##
+## Rotation is a transform write rather than a redraw, but the cheapest one
+## is the one not made: `move_toward` walks straight at the target, so a
+## walker's direction to it never changes over the whole approach, and one
+## in contact has stopped moving at all. Nearly every frame would rewrite
+## the angle it already had — and each write dirties this node's transform
+## plus every child's global transform, the collision shape and the Hull.
+##
+## `angle_difference` rather than a subtraction: an enemy due east of the
+## tower faces ±PI, where the sign flips on float noise and a plain compare
+## reads 2π and writes every frame — the case the guard most needs to get
+## right.
 func _face(delta: float) -> void:
 	if def.behavior == EnemyDef.Behavior.SPAWNER:
 		_spin += delta * CARRIER_SPIN
 		rotation = _spin
-	else:
-		rotation = global_position.direction_to(target.global_position).angle()
+		return
+	var facing := global_position.direction_to(target.global_position).angle()
+	if absf(angle_difference(rotation, facing)) > FACING_EPSILON:
+		rotation = facing
 
 ## A short shove toward whatever was just hit — the only signal an attack
 ## gives off from the attacking end. Everything else about being hit is
