@@ -7,8 +7,12 @@ extends Node2D
 ## This covers every pixel on screen on a web build, so it is deliberately
 ## cheap: the starfield and grid are baked into one `PackedVector2Array`
 ## per layer at load and redrawn as a single `draw_multiline` call each,
-## and the whole backdrop is about 30 primitives. The nebula breathes so
-## the screen never looks like a static wallpaper.
+## and the whole backdrop is about 30 primitives. The nebula breathes and
+## the starfield drifts, so the screen never looks like a static wallpaper.
+##
+## Nothing is rebuilt to make the stars move: the baked points are drawn
+## through a wrapped `draw_set_transform`, so the drift costs one extra
+## call per layer and no per-frame allocation.
 
 const GlowTexture = preload("res://scripts/fx/glow_texture.gd")
 const Palette = preload("res://scripts/fx/palette.gd")
@@ -22,11 +26,26 @@ const NEBULA_TEX_SIZE := 256
 ## Far, mid, near parallax-ish layers — near stars are longer and bloom.
 @export var star_counts := PackedInt32Array([150, 74, 24])
 
+## Which way the starfield slides. The mothership is welded to the centre
+## of the screen, so travel can only be shown by moving everything else:
+## stars falling read as the ship holding a course "up", into the lanes the
+## invasion comes down. Any direction works — the wrap adapts.
+const DRIFT := Vector2(0.0, 1.0)
+## Pixels per second for the nearest layer. Deliberately a crawl — this is
+## meant to register as depth at the edge of attention, never as something
+## competing with the swarm for the eye.
+const DRIFT_SPEED := 16.0
+## Each layer's share of that speed. The spread is the whole effect: at one
+## speed the field slides as a flat sheet and reads as a scrolling texture
+## rather than as distance.
+const STAR_DRIFT := [0.22, 0.5, 1.0]
+
 var _size := Vector2.ZERO
 var _star_layers: Array[PackedVector2Array] = []
 var _grid_minor := PackedVector2Array()
 var _grid_major := PackedVector2Array()
 var _clouds: Array[Dictionary] = []
+var _wrap_tiles: Array[Vector2] = []
 var _nebula_tex: GradientTexture2D
 var _phase := 0.0
 
@@ -48,6 +67,7 @@ func _process(delta: float) -> void:
 func _rebuild() -> void:
 	_size = get_viewport_rect().size
 	_build_stars()
+	_build_wrap_tiles()
 	_build_grid()
 	_build_clouds()
 	queue_redraw()
@@ -65,6 +85,19 @@ func _build_stars() -> void:
 			points.append(origin)
 			points.append(origin + Vector2(float(STAR_LENGTHS[layer]), 0.0))
 		_star_layers.append(points)
+
+## A drifting layer has to be redrawn at every wrap offset that can still
+## reach the screen: one trailing copy per axis it moves along, plus the
+## diagonal if it moves along both. `fposmod` pulls the live offset back
+## inside one screen whatever the sign of DRIFT, so the trailing copy is
+## always exactly one screen behind. Built per resize, not per frame.
+func _build_wrap_tiles() -> void:
+	var steps_x: Array = [0.0] if is_zero_approx(DRIFT.x) else [0.0, -_size.x]
+	var steps_y: Array = [0.0] if is_zero_approx(DRIFT.y) else [0.0, -_size.y]
+	_wrap_tiles.clear()
+	for x: float in steps_x:
+		for y: float in steps_y:
+			_wrap_tiles.append(Vector2(x, y))
 
 func _build_grid() -> void:
 	_grid_minor = PackedVector2Array()
@@ -121,12 +154,30 @@ func _draw() -> void:
 		draw_multiline(_grid_minor, Palette.GRID_MINOR, 1.0)
 	if not _grid_major.is_empty():
 		draw_multiline(_grid_major, Palette.GRID_MAJOR, 1.0)
+	_draw_stars()
+
+## The grid deliberately stays put while the stars move: it is the ship's
+## own reference frame rather than part of the sky, and holding it still is
+## what keeps the drift readable instead of setting the whole screen adrift.
+func _draw_stars() -> void:
 	for layer in _star_layers.size():
 		var color: Color = STAR_COLORS[layer]
 		# Only the nearest layer is bright enough to bloom.
 		if layer == _star_layers.size() - 1:
 			color = Palette.hot(color, 1.5)
-		draw_multiline(_star_layers[layer], color, float(STAR_WIDTHS[layer]))
+		var shift := _drift_shift(layer)
+		for tile in _wrap_tiles:
+			draw_set_transform(shift + tile)
+			draw_multiline(_star_layers[layer], color, float(STAR_WIDTHS[layer]))
+	# Stars happen to be drawn last, but leaving a live transform behind is
+	# a trap for whatever gets added after them.
+	draw_set_transform(Vector2.ZERO)
+
+## How far a layer has slid this frame, wrapped into one screen so the
+## offset never grows without bound and the field never runs out of stars.
+func _drift_shift(layer: int) -> Vector2:
+	var offset := DRIFT * (_phase * DRIFT_SPEED * float(STAR_DRIFT[layer]))
+	return Vector2(fposmod(offset.x, _size.x), fposmod(offset.y, _size.y))
 
 func _draw_nebula() -> void:
 	if _nebula_tex == null:
