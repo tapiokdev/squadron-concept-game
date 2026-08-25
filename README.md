@@ -1,15 +1,11 @@
 # Squadron Concept Game
 
+Playable at https://ferroflare.itch.io/squadron-concept-game
+
 A browser-playable bullet-heaven proof of concept, built in Godot 4.7.
+Your task is to protect a static mothership from waves of enemies. The mothership stays at the center of the screen where enemies try to reach and destroy it.
 
-**You are the mothership. You do not move.** There is no WASD. All of your agency
-comes from two clicks — where you send your drone squad, and when you call down a
-barrage — while your automatic weapons handle everything they can reach on their
-own. Survive eight minutes, then clear what is left on the field.
-
-The point of the POC is to find out whether that loop is actually fun: a stationary
-defender who controls the battlefield through positioning *other* units rather than
-through their own.
+Direct a squad of drones and launch barrages with mouse buttons. Level-up to improve the drone squad and to unlock new weapons and upgrades for the mothership.
 
 ## Controls
 
@@ -18,9 +14,6 @@ through their own.
 | **Right-click** | Place the rally point — the whole drone squad moves there together |
 | **Left-click** | Call a barrage at the cursor (~5s cooldown) |
 
-The rally point covers **one** lane. Everything else falls to your auto-attacks, the
-barrage, and hull integrity — choosing which threat to cover is the game.
-
 ## No art or audio assets
 
 Every shape is drawn from primitives at runtime (`scripts/fx/shapes.gd`,
@@ -28,14 +21,9 @@ Every shape is drawn from primitives at runtime (`scripts/fx/shapes.gd`,
 filtered noise when the game loads (`scripts/fx/sfx_bank.gd`). There are no sprites,
 no sample packs and no fonts beyond the engine default.
 
-That was a constraint chosen because the project has no artist, and it turned into
-the art direction: neon vector geometry with real HDR bloom, where a disciplined
-palette reads as deliberate in a way generated art would not.
+The background music is by Cyberwave-Orchestra and sourced from [Pixaby](https://pixabay.com/music/beats-slow-sci-fi-synthwave-underscore-music-loop-300694/) as credited in [CREDITS.md](CREDITS.md).
 
-The one exception is the background music, which is a third-party track — see
-[CREDITS.md](CREDITS.md).
-
-## Running it
+## Running it locally
 
 Open the project folder in **Godot 4.7** and press play. No build step, no
 dependencies to fetch.
@@ -57,8 +45,7 @@ Both, and the rest of the export gotchas, are written up in the project brief.
 - **Project brief** (`# Tower Survivors — …md`) — the full design document: locked
   decisions, the enemy roster and what each type punishes, balance reasoning, art
   and sound direction, and a long list of export traps that each cost real time.
-  It is a working document rather than an introduction, and it is where to look
-  before changing anything non-obvious.
+  It is a working document that has been updated as the game has been iterated on.
 
 ## Licence
 
@@ -66,7 +53,3 @@ Code is MIT — see [LICENSE](LICENSE). **This does not cover the music**, which
 third-party and licensed separately; [CREDITS.md](CREDITS.md) has the terms. The
 vendored Godot AI editor plugin under `addons/` is MIT and carries its own notice
 in `godot-ai-LICENSE.txt`.
-
-> The name is not settled. The repo and brief say *Tower Survivors* after the WC3
-> mod that inspired it, the project file says *Squadron Concept Game*, and the game
-> itself opens on *SURVIVE THE INVASION*.
