@@ -4,3 +4,7 @@
 
 # Export output — rebuilt from the preset, never committed
 /build/
+
+# Editor / tooling state — machine-specific, never shared
+.vscode/
+.claude/
