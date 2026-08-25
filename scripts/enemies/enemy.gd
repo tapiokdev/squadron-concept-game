@@ -20,6 +20,21 @@ const FLASH_FADE := 11.0
 ## Carriers ignore their heading and turn slowly on the spot instead.
 const CARRIER_SPIN := 0.45
 
+## How far the hull jabs at whatever it just hit, as a share of its own
+## radius, and how long that settles — so a Dreadnought shoves where a
+## Swarmer twitches. Clamped at both ends: the small hulls need a floor to
+## register at all, and nothing should out-swing the Bastion's 7px lunge,
+## which belongs to a unit swinging deliberately rather than a crowd.
+##
+## The jab moves the Hull child, never `global_position` — that drives this
+## enemy's own `move_toward`, the drones' and weapons' `nearest_live`
+## targeting, and `blocking_unit`, so displacing it would twitch the hitbox,
+## flicker which enemy the Rail picks, and corrupt the movement integration.
+const LUNGE_REACH := 0.30
+const LUNGE_MIN_PX := 3.0
+const LUNGE_MAX_PX := 7.0
+const LUNGE_TIME := 0.14
+
 ## Hull points are the same for every instance of a type, and pooled
 ## enemies reconfigure constantly, so the geometry is built once per
 ## EnemyDef and shared.
@@ -40,6 +55,9 @@ var _hull_loop := PackedVector2Array()
 var _core_at := Vector2.ZERO
 var _core_radius := 0.0
 var _spin := 0.0
+var _lunge := 0.0
+var _lunge_offset := Vector2.ZERO
+var _hull_node: Hull
 
 func _init() -> void:
 	collision_layer = ENEMY_COLLISION_LAYER
@@ -49,6 +67,10 @@ func _init() -> void:
 	var collision := CollisionShape2D.new()
 	collision.shape = _shape
 	add_child(collision)
+	var hull := Hull.new()
+	hull.enemy = self
+	add_child(hull)
+	_hull_node = hull
 	deactivate()
 
 func _ready() -> void:
@@ -64,6 +86,9 @@ func configure(pool: EnemyPool, new_def: EnemyDef, spawn_pos: Vector2, new_targe
 	global_position = spawn_pos
 	target = new_target
 	_attack_cooldown = 0.0
+	# Pooled, so clear the last life's jab or a respawn shows it mid-swing.
+	_lunge = 0.0
+	_hull_node.position = Vector2.ZERO
 	_spawn_cooldown = def.spawn_interval
 	_shape.radius = def.radius
 	_active = true
@@ -78,7 +103,7 @@ func configure(pool: EnemyPool, new_def: EnemyDef, spawn_pos: Vector2, new_targe
 	# will be seen — which is exactly a carrier's swarm.
 	if get_viewport_rect().has_point(spawn_pos):
 		FxLayer.ring(spawn_pos, def.color, def.radius * 2.6, def.radius * 0.6, 0.28, 2.0)
-	queue_redraw()
+	_hull_node.queue_redraw()
 
 func _load_hull() -> void:
 	var cached: Dictionary = _hull_cache.get(def, {})
@@ -129,12 +154,16 @@ func _process(delta: float) -> void:
 		modulate = modulate.lerp(Color.WHITE, minf(FLASH_FADE * delta, 1.0))
 		if modulate.r < 1.04:
 			modulate = Color.WHITE
+	if _lunge > 0.0:
+		_lunge = maxf(_lunge - delta / LUNGE_TIME, 0.0)
+		_hull_node.position = _lunge_offset * _lunge
 	_attack_cooldown = maxf(_attack_cooldown - delta, 0.0)
 	var reach := def.radius + target.radius
 	if global_position.distance_to(target.global_position) <= reach:
 		if _attack_cooldown == 0.0 and target.alive:
 			target.take_damage(def.contact_damage)
 			_attack_cooldown = def.attack_interval
+			_jab(target.global_position)
 	else:
 		# A drone standing in the way gets fought instead of walked through.
 		var blocker: Drone = null
@@ -144,6 +173,7 @@ func _process(delta: float) -> void:
 			if _attack_cooldown == 0.0:
 				blocker.take_damage(def.contact_damage)
 				_attack_cooldown = def.attack_interval
+				_jab(blocker.global_position)
 		else:
 			global_position = global_position.move_toward(target.global_position, def.speed * delta)
 	if def.behavior == EnemyDef.Behavior.SPAWNER and def.spawned_def != null:
@@ -163,6 +193,24 @@ func _face(delta: float) -> void:
 		rotation = _spin
 	else:
 		rotation = global_position.direction_to(target.global_position).angle()
+
+## A short shove toward whatever was just hit — the only signal an attack
+## gives off from the attacking end. Everything else about being hit is
+## drawn on the receiver (tower flash, ring, shake), which says the player
+## is taking damage but not from where; with twenty hostiles on the rim
+## that is the difference between reading the fight and guessing at it.
+##
+## Aimed at the victim rather than along local +X, because neither of the
+## two callers can rely on +X: a Carrier spins on the spot, and an enemy
+## fighting a blocking drone is still rotated at the tower behind it.
+func _jab(at: Vector2) -> void:
+	var dir := to_local(at)
+	if dir == Vector2.ZERO:
+		return
+	_lunge = 1.0
+	_lunge_offset = dir.normalized() \
+			* clampf(def.radius * LUNGE_REACH, LUNGE_MIN_PX, LUNGE_MAX_PX)
+	_hull_node.position = _lunge_offset
 
 func take_damage(amount: float) -> void:
 	if not _active:
@@ -186,11 +234,30 @@ func die() -> void:
 		FxLayer.ring(global_position, def.color, def.radius * 0.6, def.radius * 2.8, 0.3, 3.0)
 	died.emit(self)
 
-## Drawn once per spawn — the hull never changes, and both the facing and
-## the hit flash are transform/modulate writes that need no redraw.
-func _draw() -> void:
-	if def == null:
-		return
-	draw_colored_polygon(_hull, Palette.HULL)
-	draw_polyline(_hull_loop, Palette.neon(def.color, 1.2), 1.8)
-	draw_circle(_core_at, _core_radius, Palette.neon(def.color, 1.7))
+## The hull draws on its own node purely so the attack jab can be a
+## transform write. Drawn once per spawn, as before — the hull never
+## changes, and facing and hit flash are transform/modulate writes.
+##
+## Keeping the jab in draw space instead meant re-recording the polygon
+## every frame one was settling, which measured +1.35ms per frame (+46% of
+## process time) with 52 hostiles on the rim: `draw_colored_polygon` and
+## `draw_polyline` rebuild their geometry on every call, so "drawn once per
+## spawn" was carrying far more weight than it looked like. Moving the node
+## instead of the pen costs one Node2D per pooled enemy and nothing per
+## frame.
+##
+## Parented to the Enemy, so facing rotation and the hit-flash `modulate`
+## come down for free and `_lunge_offset` — already in Enemy-local space —
+## drops straight into `position`.
+class Hull extends Node2D:
+	const Palette = preload("res://scripts/fx/palette.gd")
+
+	var enemy: Enemy
+
+	func _draw() -> void:
+		if enemy == null or enemy.def == null:
+			return
+		draw_colored_polygon(enemy._hull, Palette.HULL)
+		draw_polyline(enemy._hull_loop, Palette.neon(enemy.def.color, 1.2), 1.8)
+		draw_circle(enemy._core_at, enemy._core_radius,
+				Palette.neon(enemy.def.color, 1.7))
